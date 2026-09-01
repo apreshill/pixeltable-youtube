@@ -1,10 +1,12 @@
 # RAG Is Simpler Than You Think
 
-This folder is a Jupyter notebook tutorial for multimodal RAG on a catalog of 14 photos. People ask questions in text. The evidence lives in images. You retrieve the right photos, then a vision model answers from them.
+Pixeltable is the database for this multimodal RAG app. People ask questions in text. The evidence lives in images. You retrieve the right photos, then a vision model answers from them.
+
+Photos, captions, embeddings, rewritten queries, and answers live in one Pixeltable database, `rag_demo`. Schema files declare the tables, computed columns, and indexes. The database runs those columns on every row and every new insert, and it keeps the indexes current. The notebook is how you apply each recipe and inspect the results on a catalog of 14 photos.
 
 ## Overview
 
-This tutorial lets you try six retrieval recipes on the same photos:
+You can try six retrieval recipes on the same photos:
 
 - Search photos by words that already appear in their titles
 - Generate a caption for every photo and search that caption
@@ -13,33 +15,35 @@ This tutorial lets you try six retrieval recipes on the same photos:
 - Rewrite a vague question into a short search query
 - Give the retrieved photos to a vision model and answer from that evidence
 
-CLIP (Contrastive Language-Image Pretraining) maps text and images into the same space, so a text question can retrieve photos. The photos, captions, indexes, rewritten queries, and answers live in one Pixeltable database. You change the search system by updating a schema file. You do not rebuild a separate pipeline for each recipe.
+CLIP (Contrastive Language-Image Pretraining) maps text and images into the same space, so a text question can retrieve photos. Trying another retrieval method is another column or index on the same tables. You do not stand up a vector store or an ingestion job for each recipe.
+
+This is an OLTP app. You insert photos, query them, and derive AI outputs from that data. It is not a warehouse for batch analytics.
 
 This tutorial was inspired by Rafael Pierre's [RAG Is Simpler Than You Think](https://www.lighthousenewsletter.com/p/rag-is-simpler-than-you-think) and Hugo Bowne-Anderson's account of Doug Turnbull's talk, [RAG Isn't Dead. It's Sleeping.](https://www.vanishinggradients.com/p/rag-isnt-dead-its-sleeping)
 
 ## Technical Architecture
 
-The tutorial has four main parts:
+The database is the app. Everything else declares it, fills it, or queries it.
 
-1. **Tutorial notebook (`rag-is-simpler.ipynb`)**
-   - Walks through the six recipes in order
-   - Inserts a catalog of 14 photos
-   - Runs keyword search, CLIP search, reranking, query rewriting, and answers from retrieved photos
-   - Prints each schema file, then applies it with `pxt schema diff` and `pxt schema update`
+1. **Pixeltable database (`rag_demo`)**
+   - Holds the `photos`, `queries`, and `answers` tables
+   - Computed columns run on every existing row and every new insert
+   - Embedding indexes stay current as photos come in
+   - Adding a second CLIP index does not overwrite the first, so you can compare models
 
 2. **Schema files (`recipe1_store.py` through `recipe6_answer.py`)**
-   - Each file describes the tables that recipe needs
+   - Each file is the full table definition for that recipe
    - Recipe 1 stores each photo with a title and a lowercase `search_title`
-   - Recipe 2 adds a BLIP caption
+   - Recipe 2 adds a BLIP caption as a computed column
    - Recipe 3 adds a CLIP index on the image
    - Recipe 4 adds a second CLIP index so you can compare models
    - Recipe 5 adds a `queries` table that rewrites a question
    - Recipe 6 adds an `answers` table that calls a vision model on three retrieved photos
 
-3. **Pixeltable database (`rag_demo`)**
-   - Holds the `photos`, `queries`, and `answers` tables
-   - When you insert new rows, Pixeltable updates the computed columns
-   - When you add an embedding index, Pixeltable fills it for photos that are already in the table
+3. **Notebook (`rag-is-simpler.ipynb`)**
+   - Applies each schema file with `pxt schema diff` and `pxt schema update`
+   - Inserts a catalog of 14 photos
+   - Runs keyword search, CLIP search, reranking, query rewriting, and answers from retrieved photos
 
 4. **Sample photo catalog**
    - 14 JPEG files hosted in the Pixeltable repository
@@ -155,7 +159,7 @@ The result table should have no rows. Two photos fit the question, but neither t
 
 CLIP should rank the two zebra photos first. The table shows each photo, its title, its caption, and a similarity score.
 
-## Using the Tutorial
+## Using the Application
 
 ### Recipe 1: Search Titles
 
@@ -183,7 +187,7 @@ Results:
 2. Reload the table so Python can see the new `caption` column
 3. Search captions for `striped`
 
-BLIP writes a short description for every photo. Those captions still use the word `zebra`, not `striped`, so this keyword search still returns no rows.
+BLIP is a computed column. The database runs it on every image and stores the caption. Those captions still use the word `zebra`, not `striped`, so this keyword search still returns no rows.
 
 ### Recipe 3: Search Image Content
 
@@ -191,7 +195,7 @@ BLIP writes a short description for every photo. Those captions still use the wo
 2. Reload the table so Python can see the CLIP index
 3. Search with `photos.image.similarity(string='a striped animal', idx='clip_idx')`
 
-The question is text. The index is on the image. There is nothing to split into chunks because each photo is one item.
+The question is text. The embedding index is on the image column, like any other index the database keeps current. There is nothing to split into chunks because each photo is one item.
 
 A later cell reranks a CLIP shortlist with a cross-encoder on the captions.
 
@@ -201,7 +205,7 @@ A later cell reranks a CLIP shortlist with a cross-encoder on the captions.
 2. Run the same question, `public transportation`, against `clip_idx` (ViT-B/32) and `clip_idx_v2` (ViT-B/16)
 3. Insert two new photos and confirm Pixeltable fills both indexes for them
 
-Adding the second index does not remove the first. You compare results, then keep the model that works better.
+Adding the second index does not remove the first. Both stay, so you can compare results and keep the model that works better.
 
 ### Recipe 5: Rewrite the Question
 
@@ -251,11 +255,11 @@ In the notebook, confirm:
 
 ## Data Structure
 
-The tutorial uses this file layout:
+This folder uses this file layout:
 
 ```
 simpler-rag/
-  rag-is-simpler.ipynb   # the tutorial
+  rag-is-simpler.ipynb   # apply the recipes and inspect results
   pyproject.toml         # dependencies and Pixeltable project config
   recipe1_store.py       # photos table: photo_id, image, title, search_title
   recipe2_caption.py     # adds caption
@@ -299,7 +303,7 @@ Run `uv sync --package simpler-rag` from the repo, then select the workspace env
 
 Close other large programs. These models load locally with `torch` and `transformers`. Recipe 4 loads a second CLIP model, so it uses more memory than Recipe 3.
 
-## Extending the System
+## Extending the Database
 
 ### Adding New Photos
 
