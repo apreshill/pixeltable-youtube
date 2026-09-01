@@ -1,0 +1,27 @@
+[project]
+name = "simpler-rag"
+version = "0.1.0"
+description = "Image search notebook: keyword search, captions, embeddings, and query rewriting with Pixeltable."
+requires-python = ">=3.11"
+dependencies = [
+    "openai",
+    "pixeltable>=0.7.3",
+    "sentence-transformers",
+    "torch",
+    "transformers",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel",
+    "jupyterlab",
+]
+
+[tool.uv]
+package = false
+
+[[tool.pixeltable.database]]
+# The local database. vars and secrets bind the config vars a schema declares; a hosted database is
+# a second entry, named by its uri.
+# vars.media_dest = 's3://bucket/prefix'
+# secrets.openai_api_key = '...'
