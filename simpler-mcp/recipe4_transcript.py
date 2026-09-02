@@ -56,11 +56,8 @@ class Videos(TableModel, name='videos'):
     title: pxt.Required[pxt.String]
 
     audio = pxtf.video.extract_audio(video, format='mp3')
-    transcript = pxtf.huggingface.automatic_speech_recognition(
-        audio,
-        model_id='openai/whisper-tiny.en',
-        chunk_length_s=30,
-    )
+    transcription = pxtf.whisper.transcribe(audio, model='tiny.en')
+    transcript = transcription.text.astype(pxt.String)
 
     __indexes__ = [
         pxt.EmbeddingIndex(transcript, embedding=TEXT_EMBEDDING, name='transcript_idx'),

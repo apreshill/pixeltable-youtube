@@ -97,7 +97,7 @@ Both tools return a short clip from the stored video. Speech questions still nee
 
 ### Recipe 4: Answer from captions and transcripts
 
-Apply `recipe4_transcript.py`. Pixeltable extracts audio and runs `openai/whisper-tiny.en` locally. It also adds embedding indexes to frame captions and transcripts.
+Apply `recipe4_transcript.py`. Pixeltable extracts audio and runs Whisper `tiny.en` locally. It also adds embedding indexes to frame captions and transcripts.
 
 Search the transcript from the notebook. Restart the MCP and call `ask_about_video`. The tool retrieves caption and transcript evidence, inserts an `answers` row, then returns the computed answer.
 

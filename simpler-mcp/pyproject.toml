@@ -7,11 +7,10 @@ dependencies = [
     "jupyterlab>=4.6.3",
     "mcp>=1.16,<2",
     "openai>=3.6.0",
+    "openai-whisper>=20250625",
     "pixeltable>=0.7.3",
     "sentence-transformers>=6.0.1",
     "torch>=2.13.0",
-    "torchaudio>=2.11.0",
-    "torchcodec>=0.16.0",
     "transformers>=5.16.1",
 ]
 
