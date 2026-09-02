@@ -88,7 +88,7 @@ def _clip_result(query: Any) -> list[TextContent | EmbeddedResource]:
         EmbeddedResource(
             type='resource',
             resource=BlobResourceContents(
-                uri=clip_path.as_uri(),
+                uri=f'pixeltable://mcp_demo/clips/{clip_path.name}',
                 mimeType='video/mp4',
                 blob=base64.b64encode(clip_path.read_bytes()).decode('ascii'),
             ),
