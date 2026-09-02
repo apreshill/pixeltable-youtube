@@ -57,6 +57,8 @@ Pick the folder for the video you are watching. From the repo root:
 
 ```bash
 uv sync --package simpler-rag
+# or
+uv sync --package simpler-mcp
 ```
 
 ### 3. Open the Notebook
@@ -81,6 +83,7 @@ You can also open the notebook in Cursor or VS Code and run the first cell:
 Each video has its own README with recipes, expected output, and troubleshooting.
 
 - [`simpler-rag`](simpler-rag/README.md)
+- [`simpler-mcp`](simpler-mcp/README.md)
 
 ## Expected Output
 
@@ -120,6 +123,13 @@ pixeltable-youtube/
     recipe4_migrate.py
     recipe5_rewrite.py
     recipe6_answer.py
+  simpler-mcp/
+    README.md
+    multimodal-mcps-are-simpler.ipynb
+    recipe1_store.py
+    recipe2_search.py
+    recipe3_video.py
+    recipe4_transcript.py
 ```
 
 The local Pixeltable catalog is under `~/.pixeltable`. It is not stored in this repo.
@@ -146,3 +156,4 @@ In `simpler-rag`, uncomment `pxt.drop_dir('rag_demo', force=True)`, run it, then
 - [Pixeltable docs](https://docs.pixeltable.com/)
 - [Pixeltable on YouTube](https://www.youtube.com/@PixeltableHQ)
 - [`simpler-rag` README](simpler-rag/README.md)
+- [`simpler-mcp` README](simpler-mcp/README.md)
