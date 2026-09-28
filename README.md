@@ -90,8 +90,8 @@ Each video has its own README with recipes, expected output, and troubleshooting
 ### When Installing Dependencies
 
 ```
-Resolved 189 packages in 19ms
-Audited 160 packages in 24ms
+Resolved 205 packages in 20ms
+Audited 160 packages in 23ms
 ```
 
 ### When Applying the First Schema File
@@ -118,10 +118,11 @@ pixeltable-youtube/
     README.md
     rag-is-simpler.ipynb
     recipe1_store.py
-    recipe2_caption.py
-    recipe3_search.py
-    recipe4_migrate.py
-    recipe5_rewrite.py
+    recipe2_rewrite.py
+    recipe3_caption.py
+    recipe4_search.py
+    recipe5_compare.py
+    recipe5_cutover.py
     recipe6_answer.py
   simpler-mcp/
     README.md
@@ -146,7 +147,7 @@ Run `uv sync --package simpler-rag` from the repo root, then select the workspac
 
 ### Duplicate rows after rerunning insert cells
 
-In `simpler-rag`, uncomment `pxt.drop_dir('rag_demo', force=True)`, run it, then run the notebook from the first recipe.
+In `simpler-rag`, uncomment the two reset lines in the last cell, run it, then run the notebook from the first recipe.
 
 ## Project Details
 

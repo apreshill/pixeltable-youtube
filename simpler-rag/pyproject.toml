@@ -1,12 +1,11 @@
 [project]
 name = "simpler-rag"
 version = "0.1.0"
-description = "Image search notebook: keyword search, captions, embeddings, and query rewriting with Pixeltable."
+description = "Multimodal RAG notebook: title search, query rewriting, captions, image embeddings, and answers with Pixeltable."
 requires-python = ">=3.11"
 dependencies = [
     "openai",
-    "pixeltable>=0.7.4",
-    "sentence-transformers",
+    "pixeltable>=0.7.11",
     "torch",
     "transformers",
 ]
@@ -14,6 +13,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "ipykernel",
+    "ipywidgets",
     "jupyterlab",
 ]
 

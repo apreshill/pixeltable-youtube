@@ -86,7 +86,7 @@ These videos are one catalog plus a notebook. A starter-kit app is a different p
 ## Troubleshooting
 
 - `there is no project root`: the shell or notebook cwd is not the video folder.
-- Empty keyword matches on titles: `contains()` is case sensitive. Use a lowercase computed column if the schema has one.
+- Empty keyword matches on titles: `contains()` is case sensitive by default. Pass `case=False`.
 - Duplicate rows: the insert cell ran twice. Drop the demo directory and start that tutorial again.
 
 ## Read first
