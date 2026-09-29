@@ -23,32 +23,27 @@ Each video folder has:
 - schema files (`recipe*.py`)
 - `pyproject.toml` with dependencies and `[[tool.pixeltable.database]]`
 
-The repo is a uv workspace. Members share the root `uv.lock` and `.venv`.
+Each video folder is its own uv project with its own `uv.lock` and `.venv`. There is no Python project at the repo root, so tutorials can pin different dependency versions.
 
 ## Run a tutorial
 
-From the repo root:
-
-```bash
-uv sync --package simpler-rag
-```
-
-Then work from the video folder so `pxt schema` can find the schema files:
+Work from the video folder so `pxt schema` can find the schema files:
 
 ```bash
 cd simpler-rag
-uv run --package simpler-rag jupyter lab
+uv sync
+uv run jupyter lab
 ```
 
-The first notebook cell is `!uv sync --package simpler-rag`. The kernel should be the workspace `.venv`.
+The first notebook cell is `!uv sync`. Each notebook's kernel is a named kernel for that folder's `.venv` (`simpler-rag`, `simpler-mcp`). Register it once with `uv run python -m ipykernel install --user --name <folder>`.
 
 ## Schema and catalog
 
 Apply schema from the video folder:
 
 ```bash
-pxt schema diff recipe1_store.py rag_demo
-pxt schema update recipe1_store.py rag_demo
+pxt schema diff recipe1_fulltext.py rag_demo
+pxt schema update recipe1_fulltext.py rag_demo
 ```
 
 After a schema change, reload tables in Python with `pxt.get_table(...)`.
@@ -87,7 +82,7 @@ These videos are one catalog plus a notebook. A starter-kit app is a different p
 
 - `there is no project root`: the shell or notebook cwd is not the video folder.
 - Empty keyword matches on titles: `contains()` is case sensitive by default. Pass `case=False`.
-- Duplicate rows: the insert cell ran twice. Drop the demo directory and start that tutorial again.
+- `Duplicate primary key` on insert: the insert cell ran twice. Run the notebook from the top; its reset cell drops the demo directory.
 
 ## Read first
 

@@ -10,21 +10,21 @@ From the repo root:
 
 ```bash
 uv init --bare --no-package --no-readme --name my-tutorial my-tutorial
-uv add --package my-tutorial "pixeltable>=0.7.3"
 cd my-tutorial
-uv run --package my-tutorial pxt init
+uv add "pixeltable>=0.7.11"
+uv run pxt init
 ```
 
-`uv init` adds the folder as a workspace member. `pxt init` writes `[[tool.pixeltable.database]]` into that folder's `pyproject.toml`. Run `pxt init` inside the new folder, never at the repo root.
+The folder is a standalone uv project, not a workspace member. Do not add a `pyproject.toml` or `uv.lock` at the repo root. `pxt init` writes `[[tool.pixeltable.database]]` into that folder's `pyproject.toml`. Run `pxt init` inside the new folder, never at the repo root.
 
 Put in the folder:
 
 - a consumer `README.md`
-- a notebook whose first cell is `!uv sync --package my-tutorial`
+- a notebook whose first cell is `!uv sync` and whose kernelspec is a kernel named after the folder, registered with `uv run python -m ipykernel install --user --name my-tutorial`
 - schema files next to the notebook
-- any extra dependencies with `uv add --package my-tutorial PACKAGE`
+- any extra dependencies with `uv add PACKAGE`, run inside the folder
 
-Commit the member `pyproject.toml` and the root `uv.lock`. Do not commit `.venv`.
+Commit the folder's `pyproject.toml` and `uv.lock`. Do not commit `.venv`.
 
 Point the root README's project list at the new folder README.
 
@@ -61,13 +61,15 @@ Pixeltable is the database. Schema files declare tables. The notebook is one sur
 
 ## Dependencies
 
-The member `pyproject.toml` owns the version range. The root `uv.lock` records the resolved version.
+Each folder's `pyproject.toml` owns the version range. Its `uv.lock` records the resolved versions. Run these inside the folder:
 
 ```bash
-uv add --package my-tutorial PACKAGE
+uv add PACKAGE
 uv lock --upgrade-package pixeltable
-uv sync --package my-tutorial
+uv sync
 ```
+
+Upgrading one tutorial does not change the others.
 
 ## Notebook
 
@@ -77,4 +79,4 @@ Insert cells append. Include a commented reset such as `pxt.drop_dir('demo_name'
 
 ## Cursor settings
 
-`.vscode/settings.json` points at the workspace `.venv`. Commit it. It is a project setting, not a personal editor preference.
+`.vscode/settings.json` turns off environment activation in the terminal. Commit it. `uv run` and `uv sync` find each tutorial's `.venv` on their own, and an activated environment from another folder sets a stale `VIRTUAL_ENV`.

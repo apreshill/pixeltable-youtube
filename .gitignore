@@ -7,7 +7,7 @@ __pycache__/
 dist/
 build/
 
-# uv / virtualenvs. The workspace has one .venv at the repo root.
+# uv / virtualenvs. Each tutorial folder has its own .venv.
 .venv/
 venv/
 

@@ -53,29 +53,25 @@ cd pixeltable-youtube
 
 ### 2. Install Dependencies
 
-Pick the folder for the video you are watching. From the repo root:
+Each video folder is its own uv project, with its own `uv.lock` and `.venv`. Go to the folder for the video you are watching and install it:
 
 ```bash
-uv sync --package simpler-rag
-# or
-uv sync --package simpler-mcp
+cd simpler-rag
+uv sync
 ```
 
 ### 3. Open the Notebook
 
-Run commands from that video folder so `pxt schema` can find the schema files.
+Run Jupyter from that video folder so `pxt schema` can find the schema files.
 
 ```bash
-cd simpler-rag
-uv run --package simpler-rag jupyter lab
+uv run jupyter lab
 ```
 
-Open `rag-is-simpler.ipynb`. Select the `pixeltable-youtube` kernel if Jupyter offers it.
-
-You can also open the notebook in Cursor or VS Code and run the first cell:
+Each folder README has one command that registers the folder's `.venv` as a Jupyter kernel named after the folder. Open `rag-is-simpler.ipynb` in Jupyter, Cursor, or VS Code, pick that kernel, and run the first cell:
 
 ```python
-!uv sync --package simpler-rag
+!uv sync
 ```
 
 ### 4. Follow the Folder README
@@ -117,13 +113,13 @@ pixeltable-youtube/
   simpler-rag/
     README.md
     rag-is-simpler.ipynb
-    recipe1_store.py
-    recipe2_rewrite.py
-    recipe3_caption.py
-    recipe4_search.py
-    recipe5_compare.py
-    recipe5_cutover.py
-    recipe6_answer.py
+    recipe1_fulltext.py
+    recipe2_agentic.py
+    recipe3_hybrid.py
+    recipe5_tiers.py
+    recipe6_compare.py
+    recipe6_cutover.py
+    bonus_answer.py
   simpler-mcp/
     README.md
     multimodal-mcps-are-simpler.ipynb
@@ -143,11 +139,11 @@ The local Pixeltable catalog is under `~/.pixeltable`. It is not stored in this 
 
 ### The notebook kernel cannot import Pixeltable
 
-Run `uv sync --package simpler-rag` from the repo root, then select the workspace `.venv` as the kernel.
+Run `uv sync` from the video folder, register the kernel as the folder README shows, then pick it.
 
 ### Duplicate rows after rerunning insert cells
 
-In `simpler-rag`, uncomment the two reset lines in the last cell, run it, then run the notebook from the first recipe.
+In `simpler-rag`, run the notebook from the top. The reset cell after `uv sync` starts it from empty tables.
 
 ## Project Details
 

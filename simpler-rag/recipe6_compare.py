@@ -1,4 +1,4 @@
-"""Recipe 5a: add a second embedding model next to the first and compare them."""
+"""Recipe 6: Full pre-embedding. Every photo gets the new model, next to the old one, so you can compare."""
 
 import pixeltable as pxt
 import pixeltable.functions as pxtf
@@ -7,9 +7,10 @@ TableModel = pxt.model_base()
 
 
 class Photos(TableModel, name='photos'):
-    photo_id: pxt.Int
+    photo_id = pxt.Column(type=pxt.Int, primary_key=True)
     image: pxt.Image
     title: pxt.String | None
+    hot: pxt.Bool | None
 
     caption = pxtf.huggingface.image_captioning(
         image,

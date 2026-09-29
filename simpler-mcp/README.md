@@ -56,20 +56,21 @@ git clone https://github.com/apreshill/pixeltable-youtube.git
 cd pixeltable-youtube
 ```
 
-Install this workspace member:
-
-```bash
-uv sync --package simpler-mcp
-```
-
-Run Jupyter from the tutorial folder:
+Install this tutorial's dependencies and run Jupyter from its folder:
 
 ```bash
 cd simpler-mcp
-uv run --package simpler-mcp jupyter lab
+uv sync
+uv run jupyter lab
 ```
 
-Open `multimodal-mcps-are-simpler.ipynb`. Use the workspace `.venv` as the kernel.
+Register this folder's `.venv` as a Jupyter kernel named `simpler-mcp`. The notebook is set to use it:
+
+```bash
+uv run python -m ipykernel install --user --name simpler-mcp --display-name simpler-mcp
+```
+
+Open `multimodal-mcps-are-simpler.ipynb` and pick the `simpler-mcp` kernel.
 
 ## Run the recipes
 
@@ -106,7 +107,7 @@ Search the transcript from the notebook. Restart the MCP and call `ask_about_vid
 Start the server from this folder:
 
 ```bash
-uv run --package simpler-mcp python server.py
+uv run python server.py
 ```
 
 Copy `cursor-mcp.json.example` to `.cursor/mcp.json` in a project that should use the server. Enable the server in Cursor's MCP settings.
