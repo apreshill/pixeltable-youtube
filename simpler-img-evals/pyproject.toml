@@ -1,0 +1,25 @@
+[project]
+name = "simpler-img-evals"
+version = "0.1.0"
+description = "Image eval harness: generate or edit an image, then grade it with gates, scores, and failure tags."
+requires-python = ">=3.11"
+dependencies = [
+    "google-genai>=2.16.0",
+    "openai>=2.52.1",
+    "pillow>=12.3.0",
+    "pixeltable>=0.7.11",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.4.0",
+    "jupyterlab>=4.6.4",
+]
+
+[[tool.pixeltable.database]]
+# The local database. vars supply the values of the config vars a schema declares; a hosted
+# database is a second entry, named by its uri.
+# vars.media_dest = 's3://bucket/prefix'

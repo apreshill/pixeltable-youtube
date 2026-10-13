@@ -1,0 +1,25 @@
+interview question I like - multi-modal RAG w/ an agent
+
+can go high level & also rabbit hole into context engineering, tokenization, harness design, search, how models are trained, etc
+
+Setup:
+there’s a folder with multi-modal data - markdown files, PDFs, image files, video files
+
+Let’s build a Q&A system over this data.  
+
+Rabbit Holes & Follow-Ups:
+- How would a ReadFile() tool work per modality?  Let’s talk about preprocessing, tokenization & ingestion into the context window and if they differ per modality?  Anything to be careful of?
+
+- How would you design the search harness?  say we care a lot of about reducing costs from unnecessary reads?  or we care a lot about recall
+
+- What if we had A LOT of video data, how would your approach change?  Would you consider preprocessing (ex: transcripts)?  how would that match to how the model builder recommendation based on how it was trained?
+
+- what model(s) would you use and why?  if multiple, how would they work together in harness?
+
+- here are some query patterns.  the data is mostly about sports events (transcripts, gameplay footage, stills, reports).  most people ask questions about when an event happened.  some ask “how” it happened in the real world.  let’s talk about how to research and design around these patterns by looking through our data
+
+you can go infinitely deep here.  
+
+i’d like talking through mental models around model context & the harness for preparing context.  also details around how to do efficient search and when to pull context into the context window vs operate over it via code
+
+very useful to talk through different levels of abstraction with someone, can tell pretty quickly how much they’ve considered agents and the data they operate over, also would just be a pretty fun convo!

@@ -1,0 +1,58 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=block" rel="stylesheet">
+<style>
+:root { --paper:#FAFAF8; --ink:#0A0B0A; --ink-2:#4F4F4F; --ink-3:#8A857F; --rule:#E2E0DC; --card:#FFFFFF; --term:#0E0F0E; --term-line:#232523;
+  --t-text:#ECEAE5; --t-out:#B9B5AE; --t-dim:#6F6B66; --red:#DD2403; --yellow:#F2AA02; --blue-light:#7BA7EF;
+  --sans:"Inter Tight", ui-sans-serif, system-ui, sans-serif; --mono:"JetBrains Mono", ui-monospace, Menlo, monospace; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { background:var(--paper); }
+body { font-family:var(--sans); color:var(--ink); -webkit-font-smoothing:antialiased; width:1600px; padding:56px 64px 60px; }
+.top { display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:19px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); }
+.kicker { display:flex; align-items:center; gap:14px; }
+.pix { display:inline-flex; gap:5px; } .pix i { width:12px; height:12px; border-radius:3px; display:block; }
+.pix i:nth-child(1){background:var(--red);} .pix i:nth-child(2){background:var(--yellow);} .pix i:nth-child(3){background:var(--blue-light);}
+h1 { font-weight:600; letter-spacing:-0.035em; line-height:1.04; font-size:60px; margin-top:34px; text-wrap:balance; max-width:1300px; }
+.step { display:inline-flex; align-items:center; gap:12px; font-family:var(--mono); font-size:18px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; background:var(--ink); color:var(--paper); padding:8px 16px 8px 10px; border-radius:10px; }
+.step .n { background:var(--yellow); color:var(--ink); width:30px; height:30px; border-radius:7px; display:inline-flex; align-items:center; justify-content:center; }
+.dark .step { background:#1E201E; }
+code, .mono { font-family:var(--mono); font-variant-ligatures:none; }
+.callout { margin-top:28px; border:1.5px solid var(--rule); background:var(--card); border-radius:18px; padding:22px 28px; display:flex; gap:20px; align-items:center; }
+.callout .tag { flex:none; font-family:var(--mono); font-size:16px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink); background:var(--yellow); border-radius:7px; padding:6px 10px; }
+.callout p { font-size:25px; line-height:1.4; color:var(--ink-2); }
+.callout p b { color:var(--ink); font-weight:600; }
+</style></head><body>
+<style>
+.row { display:grid; grid-template-columns:1fr 56px 1fr 56px 1fr; align-items:stretch; margin-top:44px; }
+.card { background:var(--card); border:1.5px solid var(--rule); border-radius:22px; padding:28px 30px 28px; display:flex; flex-direction:column; box-shadow:0 1px 0 rgba(0,0,0,.03), 0 24px 48px -32px rgba(10,11,10,.25); }
+.card.dark { background:var(--ink); border-color:var(--ink); color:var(--t-text); box-shadow:0 24px 48px -24px rgba(10,11,10,.45); }
+.card .step { align-self:flex-start; }
+.card h2 { font-size:46px; font-weight:600; letter-spacing:-0.03em; margin-top:22px; }
+.card p { font-size:25px; line-height:1.4; color:var(--ink-2); margin-top:12px; flex:1; }
+.card.dark p { color:var(--t-out); }
+.col { margin-top:26px; display:flex; align-items:center; justify-content:space-between; border-top:1.5px solid var(--rule); padding-top:18px; }
+.card.dark .col { border-color:var(--term-line); }
+.col small { font-family:var(--mono); font-size:15px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); }
+.card.dark .col small { color:var(--t-dim); }
+.col code { font-size:24px; font-weight:600; background:#EEECE7; border-radius:8px; padding:4px 12px; }
+.card.dark .col code { background:rgba(242,170,2,.16); color:#FFD36B; }
+.chips { display:flex; flex-wrap:nowrap; gap:6px; margin-top:16px; }
+.chips span { font-family:var(--mono); font-size:14px; letter-spacing:0; border:1px solid #2E302E; border-radius:7px; padding:4px 8px; color:var(--t-text); }
+.arrow { display:flex; align-items:center; justify-content:center; }
+.arrow svg { width:40px; height:40px; }
+</style>
+<div class="top"><span class="kicker"><span class="pix"><i></i><i></i><i></i></span>What RAG is</span><span>RAG is simpler than you think</span></div>
+<h1>Three steps. Every recipe changes only the first one.</h1>
+<div class="row">
+  <div class="card dark"><span class="step"><span class="n">1</span>Step</span><h2>Retrieve</h2><p>Find the data that might answer the question.</p>
+    <div class="chips"><span>images</span><span>video</span><span>audio</span><span>documents</span><span>text</span></div>
+    <div class="col"><small>In this app</small><code>hits</code></div></div>
+  <div class="arrow"><svg viewBox="0 0 40 40"><path d="M6 20h26m-8-8 8 8-8 8" fill="none" stroke="#8A857F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <div class="card"><span class="step"><span class="n">2</span>Step</span><h2>Augment</h2><p>Put the question and that data into the prompt.</p>
+    <div class="col"><small>In this app</small><code>answer_messages</code></div></div>
+  <div class="arrow"><svg viewBox="0 0 40 40"><path d="M6 20h26m-8-8 8 8-8 8" fill="none" stroke="#8A857F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <div class="card"><span class="step"><span class="n">3</span>Step</span><h2>Generate</h2><p>A language model answers from that data.</p>
+    <div class="col"><small>In this app</small><code>answer</code></div></div>
+</div>
+<div class="callout"><span class="tag">Every recipe</span><p><b>changes only the retrieve step.</b> The augment and generate steps stay the same.</p></div>
+</body></html>

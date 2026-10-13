@@ -1,0 +1,9 @@
+{
+  "case_id": "logo_year_edit",
+  "table": "edits",
+  "workflow": "logo_edit",
+  "gen_prompt": "Edit the logo by changing the text from FIELD to BUTTER.\nDo not change any other text, colors, shapes, or layout.",
+  "prompt": "Edit the logo by changing the text from FIELD to BUTTER.\nDo not change any other text, colors, shapes, or layout.",
+  "criteria": "The requested edit is applied exactly.\nAll non-target content remains unchanged.\nCharacter style, color, and geometry remain consistent with the original.",
+  "ref_image": "assets/logo_input.png"
+}

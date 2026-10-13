@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "diagram-check",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "/private/tmp/claude-501/-Users-alison-pxt-Documents-Github-pixeltable-youtube/955fa030-931a-4e8e-b94c-1f7ce70074ae/scratchpad/diagrams"],
+      "port": 8765
+    },
+    {
+      "name": "graphics-check",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8766", "--directory", "/Users/alison-pxt/Documents/Github/pixeltable-youtube/simpler-rag/images"],
+      "port": 8766
+    }
+  ]
+}

@@ -40,7 +40,7 @@ Before you begin, you need:
 - **[uv](https://docs.astral.sh/uv/)**
 - **Git**
 
-Some recipes call OpenAI. Those cells need `OPENAI_API_KEY`. The folder README says which recipes that is.
+Tutorials that call OpenAI need `OPENAI_API_KEY`. The folder README says which ones.
 
 ## Setup Instructions
 
@@ -80,6 +80,7 @@ Each video has its own README with recipes, expected output, and troubleshooting
 
 - [`simpler-rag`](simpler-rag/README.md)
 - [`simpler-mcp`](simpler-mcp/README.md)
+- [`simpler-img-evals`](simpler-img-evals/README.md)
 
 ## Expected Output
 
@@ -113,13 +114,16 @@ pixeltable-youtube/
   simpler-rag/
     README.md
     rag-is-simpler.ipynb
+    rag_udfs.py
     recipe1_fulltext.py
     recipe2_agentic.py
-    recipe3_hybrid.py
-    recipe5_tiers.py
-    recipe6_compare.py
-    recipe6_cutover.py
-    bonus_answer.py
+    recipe3a_captions.py
+    recipe3b_hybrid.py
+    recipe5a_tiers.py
+    recipe5b_hot_search.py
+    recipe6a_compare.py
+    recipe6b_cutover.py
+    bonus_multi.py
   simpler-mcp/
     README.md
     multimodal-mcps-are-simpler.ipynb
@@ -127,6 +131,13 @@ pixeltable-youtube/
     recipe2_search.py
     recipe3_video.py
     recipe4_transcript.py
+  simpler-img-evals/
+    README.md
+    demo.ipynb
+    schema.py
+    udfs.py
+    scripts/
+    use_cases/
 ```
 
 The local Pixeltable catalog is under `~/.pixeltable`. It is not stored in this repo.
@@ -154,3 +165,4 @@ In `simpler-rag`, run the notebook from the top. The reset cell after `uv sync` 
 - [Pixeltable on YouTube](https://www.youtube.com/@PixeltableHQ)
 - [`simpler-rag` README](simpler-rag/README.md)
 - [`simpler-mcp` README](simpler-mcp/README.md)
+- [`simpler-img-evals` README](simpler-img-evals/README.md)

@@ -11,7 +11,7 @@ From the repo root:
 ```bash
 uv init --bare --no-package --no-readme --name my-tutorial my-tutorial
 cd my-tutorial
-uv add "pixeltable>=0.7.11"
+uv add "pixeltable>=0.7.14"
 uv run pxt init
 ```
 

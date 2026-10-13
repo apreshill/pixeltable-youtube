@@ -1,0 +1,10 @@
+{
+  "case_id": "vto_jacket_tryon",
+  "table": "edits",
+  "workflow": "virtual_try_on",
+  "gen_prompt": "Put the person in the first image into the jacket shown in the second image.\nKeep the person's face, pose, body shape, and background unchanged.\nPreserve the garment's color, pattern, and key details.\nDo not add extra accessories, text, or new elements.",
+  "prompt": "Put the person in the first image into the jacket shown in the second image.\nKeep the person's face, pose, body shape, and background unchanged.\nPreserve the garment's color, pattern, and key details.\nDo not add extra accessories, text, or new elements.",
+  "criteria": "The output preserves the same person and background.\nThe jacket matches the reference garment closely.\nBody shape and pose remain consistent outside normal garment effects.\nThe result looks physically plausible.",
+  "ref_image": "assets/person.png",
+  "ref_image_2": "assets/garment.png"
+}

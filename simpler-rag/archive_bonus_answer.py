@@ -23,6 +23,7 @@ class Photos(TableModel, name='photos'):
         model_kwargs={'max_length': 30},
     )
 
+    # clip_idx_v2 stores an embedding of each image. A text query is embedded only when you search.
     __indexes__ = [
         pxt.EmbeddingIndex(
             image,

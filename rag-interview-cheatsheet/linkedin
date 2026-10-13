@@ -1,0 +1,38 @@
+Viv from LangChain shared an interview question on X. Design a Q&A agent over a folder of markdown, PDFs, images, and video.
+
+I asked my coding agent, which has the Pixeltable skill, to write candidates a cheatsheet for it. Full disclosure, I work on Pixeltable, a multimodal backend. I assured the agent that plugging Pixeltable in interviews was ok 😄
+
+1. How would a ReadFile() tool work per file type?
+- Each file type needs its own conversion, and video and images take the most work.
+- Do that work once when files come in, not on every question.
+- Use infrastructure that's natively multimodal, so you don't build a separate stack per file type.
+Plug #1: guess which one I'd point you to. Frames, clips, and embeddings are built in, so there's no ffmpeg job to write.
+
+2. How would you design the search harness? What if we care most about cost, or about recall?
+- Search everything you prepared, and return each hit with a short preview and its page or timestamp.
+- For cost, good previews keep the context window small.
+- For recall, combine keyword, embedding, and frame search, since each misses things the others catch.
+Plug #2: all of those searches run over the same files in one database, so every result points back to the same file and time, whichever search found it.
+
+3. What about A LOT of video?
+- Preprocess once, with timestamped transcripts and frames at the rate the model expects. Gemini's default is one frame per second.
+- Avoid sending raw video at question time. Gemini counts about 100 tokens per second of video at default settings, so it adds up fast.
+Plug #3: each video is transcribed and embedded once, and adding more only processes the new ones.
+
+4. Which models?
+- Use different models for search and for answering.
+- For search, use a video embedding model like Twelve Labs when motion or sound matters, or CLIP on frames when cost or privacy matters, since it's free and runs locally.
+- For answering, use a model that takes video, like Gemini, on the top few clips.
+Plug #4: hosted or local, each model is one function call, so you can compare Twelve Labs and CLIP on the same videos.
+
+5. The data is sports events. Most people ask "when" something happened, and some ask "how." How would you design for both?
+- "When" is usually a moment in a match. Commentary and the on-screen scoreboard catch score-based moments, and video embeddings on short clips catch visual ones.
+- "How" spans a stretch of the match, so summarize each set ahead of time and have the model cite timestamps.
+Plug #5: every search result keeps its time in the video, which answers "when" and points to the footage for "how."
+
+6. Context window or code?
+- Use code for mechanical work, like counting how many documents mention a name, and pass only the result to the model.
+- Use the context window for work that takes understanding, like explaining a scene from its transcript and clips.
+Plug #6: the queries you write are also tools the model can call, so it can run that count itself.
+
+New to multimodal RAG? https://www.pixeltable.com/learn/what-is-multimodal-rag

@@ -1,4 +1,4 @@
-"""Recipe 6, cutover: keep the new model and drop the old index."""
+"""Recipe 3, step a: a BLIP caption and a CLIP index for every photo."""
 
 import pixeltable as pxt
 import pixeltable.functions as pxtf
@@ -10,7 +10,6 @@ class Photos(TableModel, name='photos'):
     photo_id = pxt.Column(type=pxt.Int, primary_key=True)
     image: pxt.Image
     title: pxt.String | None
-    hot: pxt.Bool | None
 
     caption = pxtf.huggingface.image_captioning(
         image,
@@ -21,7 +20,7 @@ class Photos(TableModel, name='photos'):
     __indexes__ = [
         pxt.EmbeddingIndex(
             image,
-            embedding=pxtf.huggingface.clip.using(model_id='openai/clip-vit-base-patch16'),
-            name='clip_idx_v2',
+            embedding=pxtf.huggingface.clip.using(model_id='openai/clip-vit-base-patch32'),
+            name='clip_idx',
         ),
     ]

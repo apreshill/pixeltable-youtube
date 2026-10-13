@@ -1,49 +1,53 @@
 # RAG Is Simpler Than You Think
 
-Pixeltable is the database for this multimodal RAG app. People ask questions in text. The evidence lives in images. You retrieve the right photos, then a vision model answers from them.
+Pixeltable is the database behind this multimodal RAG app. People ask questions in text. The evidence lives in images. The app inserts a question, and Pixeltable retrieves the right photos and has a vision model answer from them.
 
-Photos, captions, embeddings, questions, and answers live in one Pixeltable database, `rag_demo`. Schema files declare the tables, computed columns, queries, and indexes. The database runs those columns on every row and every new insert, and it keeps the indexes current. The notebook applies each recipe and shows the results on a catalog of 14 photos, then two more.
+Photos, captions, embeddings, questions, and answers live in one Pixeltable database, `rag_demo`. The `queries` table is the app's backend: an app inserts a question and reads back the retrieved photos (`hits`) and the `answer`. Each recipe changes only how `hits` is computed. The answer step never changes. The notebook applies each recipe, re-answers the same questions, and ends by serving `queries` as an API.
 
 The six recipe names and the idea come from Rafael Pierre's [RAG Is Simpler Than You Think](https://www.lighthousenewsletter.com/p/rag-is-simpler-than-you-think) and Hugo Bowne-Anderson's account of Doug Turnbull's talk, [RAG Isn't Dead. It's Sleeping.](https://www.vanishinggradients.com/p/rag-isnt-dead-its-sleeping)
 
 ## Overview
 
-The six recipes go from simplest to most complex. Add the next one only when the one before it misses a question you care about.
+The six recipes go from simplest to most complex. Each one ends with the answers to the same questions, so you can see what it fixes. Add the next recipe only when the one before it misses a question you care about.
 
-1. **The MVP: Full-Text Search Only.** Keyword search on the titles that come with each photo.
-2. **Agentic Query Rewriting.** An LLM turns each question into keywords, searches the titles, and tries broader keywords if nothing matched.
-3. **Hybrid Search (Sparse + Dense Reranking).** Keyword candidates from BLIP captions, ranked by a CLIP image embedding.
-4. **On-The-Fly Embedding (The Fresh Data Play).** New photos are searchable as soon as they are inserted. The index updates on insert, so it is never stale.
-5. **Pre-Embedding with Hot/Cold Tiers.** The hot tier is a view of the most viewed photos with its own index on a newer model. Promoting a photo is one `update`.
-6. **Full Pre-Embedding (The Scale Play).** Every photo gets the newer model next to the old one. Compare them, then drop the old index.
+1. **The MVP: Full-Text Search Only.** `hits` is the photos whose title shares a word with the question.
+2. **Agentic Query Rewriting.** An LLM turns the question into keywords, searches the titles, and tries broader keywords if nothing matched.
+3. **Hybrid Search (Sparse + Dense Reranking).** Keyword matches from titles and BLIP captions, ranked by a CLIP image embedding.
+4. **On-The-Fly Embedding (The Fresh Data Play).** New photos are captioned and indexed on insert, so they answer questions right away.
+5. **Pre-Embedding with Hot/Cold Tiers.** `hits` searches only the photos marked hot. Promoting a photo is one `update`.
+6. **Full Pre-Embedding (The Scale Play).** Every photo gets a newer CLIP model next to the old one. Compare them, drop the old index, and search every photo.
 
-A bonus section splits a question with two requests into two searches and answers from the retrieved photos.
+A bonus splits a question that asks for two things into two searches. The last section serves `queries` as `POST /ask`, so an app can send questions and read answers.
 
-CLIP (Contrastive Language-Image Pretraining) maps text and images into the same space, so a text question can retrieve photos. Each recipe is a column, a query, an index, or a view on the same tables. You do not stand up a vector store or an ingestion job for each recipe.
+CLIP (Contrastive Language-Image Pretraining) maps text and images into the same space, so a text question can retrieve photos. Each recipe is a column, a query, or an index on the same tables. You do not stand up a vector store or an ingestion job for each recipe.
 
 ## Technical Architecture
 
 1. **Pixeltable database (`rag_demo`)**
-   - Holds the `photos` and `queries` tables and the `hot_photos` view
-   - Computed columns run on every existing row and every new insert
-   - Query columns (`first_hits`, `title_hits`, `photos_1`, `photos_2`) search `photos` for each new question
-   - Embedding indexes stay current as photos come in or change
+   - `photos`: the image, its title, and later a caption, a `hot` flag, and CLIP indexes
+   - `queries`: one row per question, with computed `hits`, `answer`, and the columns each recipe adds
+   - `hits` is a query column. Each recipe edits it in place, and `pxt recompute` re-runs it and the answer for the questions already stored.
 
 2. **Schema files**
    - Each file is the full definition of the tables it declares
-   - `recipe1_fulltext.py`: the `photos` table with a `photo_id` primary key, an image, and a title
-   - `recipe2_agentic.py`: adds a `queries` table that rewrites each question, searches the titles, and retries once
-   - `recipe3_hybrid.py`: adds a BLIP `caption` and a CLIP index (`clip_idx`, ViT-B/32)
-   - Recipe 4 has no schema file. It inserts new photos and searches them.
-   - `recipe5_tiers.py`: adds a `hot` column and a `hot_photos` view with its own index (`hot_idx`, ViT-B/16)
-   - `recipe6_compare.py`: adds `clip_idx_v2` (ViT-B/16) for every photo
-   - `recipe6_cutover.py`: keeps only `clip_idx_v2`
-   - `bonus_answer.py`: adds `parts`, `photos_1`, `photos_2`, and a vision model `answer` to `queries`
+   - `rag_udfs.py`: keyword matching, the answer prompt, and merging two lists of photos
+   - `recipe1_fulltext.py`: `photos`, and `queries` with `hits` from title words and an `answer`
+   - `recipe2_agentic.py`: two LLM tries at keywords; `hits` searches the titles with them
+   - `recipe3a_captions.py`: a BLIP `caption` and a CLIP index (`clip_idx`, ViT-B/32)
+   - `recipe3b_hybrid.py`: `hits` becomes keyword matches from titles and captions, ranked by CLIP
+   - Recipe 4 has no schema file. It inserts two photos and a question.
+   - `recipe5a_tiers.py`: a `hot` column
+   - `recipe5b_hot_search.py`: `hits` searches only the hot photos
+   - `recipe6a_compare.py`: a second CLIP index (`clip_idx_v2`, ViT-B/16) for every photo
+   - `recipe6b_cutover.py`: drops `clip_idx`; `hits` searches every photo with `clip_idx_v2`
+   - `bonus_multi.py`: splits the question in two and combines the photos from both searches. It also declares the API route, `POST /ask`, so the same file serves the app
+
+   Steps a and b are separate updates on purpose. Pixeltable 0.7.14 fails when one update adds a column or index to `photos` and also points `hits` at a search that uses it.
 
 3. **Notebook (`rag-is-simpler.ipynb`)**
    - Resets `rag_demo`, then applies each schema file with `pxt schema diff` and `pxt schema update`
-   - Inserts 14 photos, then two more in Recipe 4
-   - Runs one or two searches per recipe to show what it finds and what it misses
+   - Inserts 14 photos and four questions, then two more photos and a fifth question in Recipe 4
+   - Ends every recipe with the questions, their `hits`, and their answers
 
 4. **Sample photo catalog**
    - JPEG files hosted in the Pixeltable repository
@@ -54,9 +58,18 @@ CLIP (Contrastive Language-Image Pretraining) maps text and images into the same
 - **Python 3.11 or newer**
 - **[uv](https://docs.astral.sh/uv/)** for installing this folder's dependencies
 - **Git** for cloning the repository
-- **An OpenAI API key** for Recipe 2 and the bonus
+- **An OpenAI API key**
 
-Recipe 2 and the bonus call `gpt-4o-mini`. Set `OPENAI_API_KEY` where the `pxt` daemon runs before you apply Recipe 2. The other recipes run locally.
+Every recipe answers with `gpt-4o-mini`, and Recipe 2 on also rewrites questions with it. BLIP and CLIP run locally.
+
+Both the notebook and the `pxt` daemon call OpenAI. The daemon runs `pxt recompute`. The simplest way to give both of them the key is to put it in `~/.pixeltable/config.toml`:
+
+```toml
+[openai]
+api_key = 'sk-...'
+```
+
+Then restart the daemon once from `simpler-rag/` with `uv run pxt daemon restart`.
 
 This folder is a Pixeltable project root. `simpler-rag/pyproject.toml` already contains a `[[tool.pixeltable.database]]` section, so you do not need to run `pxt init` after cloning.
 
@@ -78,7 +91,7 @@ cd simpler-rag
 uv sync
 ```
 
-That creates `simpler-rag/.venv` and installs Pixeltable 0.7.11 or newer, plus OpenAI, torch, transformers, and Jupyter.
+That creates `simpler-rag/.venv` and installs Pixeltable 0.7.14 or newer, plus OpenAI, torch, transformers, and Jupyter.
 
 ### 3. Register the Kernel
 
@@ -105,7 +118,8 @@ Run the notebook from top to bottom. Each recipe follows the same pattern:
 1. Print the schema file
 2. Preview the change with `pxt schema diff FILE rag_demo`
 3. Apply the change with `pxt schema update FILE rag_demo -f`
-4. Run a search that shows what the recipe finds and what it misses
+4. If `hits` changed, re-run it for the stored questions with `pxt recompute rag_demo/queries hits -f`. The answers follow.
+5. Show the questions, their `hits`, and their answers
 
 ### 6. Start Over
 
@@ -113,40 +127,47 @@ The cell after `uv sync` drops `rag_demo`, so running the notebook from the top 
 
 ## Expected Output
 
+The four questions are `show me a zebra`, `any pets?`, `do you have a photo of the subway?`, and `anything with stripes?`. Recipe 4 adds `anything with an umbrella?`. The answers come from an LLM and vary from run to run. The photos in `hits` are what to check.
+
 ### Recipe 1
 
-- `zebra` in titles: photos 6 and 13
-- `puppy` in titles: no rows, because photo 7's title calls it a dog
+- `show me a zebra`: photos 6 and 13
+- The other three: no photos, because `pets`, `subway`, and `stripes` are not in any title
 
 ### Recipe 2
 
-- When the first keywords find nothing, the second try broadens them. `any puppies?` ends with keywords that include `dog` and finds photo 7. `do you have a photo of the subway?` ends with keywords that include `train` and finds photo 12.
-
-The exact keywords can vary.
+- When the first keywords find nothing, the second try broadens them. Expect `any pets?` to reach `dog` (photo 7) and the subway question to reach `train` (photo 12). The exact keywords vary.
 
 ### Recipe 3
 
-- `a striped animal`: photos 6 and 13 rank first
-- Captions that contain `riding`, ranked by `a jungle`: photo 10 (elephant trek) above photo 8 (horse riders)
+- Every photo gets a BLIP caption. Photo 4's caption calls the giraffe a "gife".
+- The four questions find the same photos as in Recipe 2, now ranked by CLIP
+- `anything in a field?`: the cow (photo 14) and the grazing zebra (photo 6). No title says field, but their captions do.
 
 ### Recipe 4
 
-- After inserting photos 15 and 16 without titles, `an umbrella` ranks photo 15 first
+- `anything with an umbrella?`: photo 15, which has no title
 
 ### Recipe 5
 
-- With photos 4, 6, 7, and 9 marked hot, `a striped animal` in the hot tier ranks photo 6 first
-- After marking photo 13 hot, it ranks second in the hot tier
+- With photos 4, 6, 7, and 9 marked hot, every question gets the three closest hot photos, even when none fit. The subway question cannot reach the train.
+- After marking photo 13 hot, the zebra and stripes questions include it
 
 ### Recipe 6
 
 - `a pet` on `clip_idx` (ViT-B/32): the two zebras rank above the dog
 - `a pet` on `clip_idx_v2` (ViT-B/16): the dog ranks first
-- The diff for `recipe6_cutover.py` marks the dropped `clip_idx` as `DESTRUCTIVE`
+- The diff for `recipe6b_cutover.py` marks the dropped `clip_idx` as `DESTRUCTIVE`
+- After the cutover, `hits` holds the top 2 photos for each question from every photo
 
 ### Bonus
 
-- `show me a zebra and something to eat` splits into two requests, retrieves two photos for each, and the answer cites the photo IDs
+- One search for `show me flowers and a zebra` keeps the two zebras and misses the vase of flowers
+- Split into two parts, its hits include the vase of flowers (photo 5) and the zebras (photos 13 and 6)
+
+### Serve it as an app
+
+- `POST /ask` with `is there a clock?` returns the street clock (photo 11) and an answer, and saves the question in `queries`
 
 ## Troubleshooting
 
@@ -160,15 +181,27 @@ You ran the command from the wrong directory. `cd` into `simpler-rag` and run it
 
 ### The cutover update is refused
 
-Dropping an index destroys its data, so `pxt schema update` needs `--allow-destructive`. The notebook passes it for `recipe6_cutover.py`.
+Dropping an index destroys its data, so `pxt schema update` needs `--allow-destructive`. The notebook passes it for `recipe6b_cutover.py`.
+
+### The update says stored values were not recomputed
+
+That's expected when a recipe changes `hits`. Pixeltable keeps stored results, so it does not rerun model calls you already paid for. To re-answer the stored questions with the new search, run `pxt recompute rag_demo/queries hits -f`. It re-runs `hits` and the answer for those rows. Without `-f`, the command asks for confirmation, which a notebook cell cannot give.
+
+### `pxt service update` says FastAPIRouter requires fastapi
+
+The `pxt` daemon started before `pixeltable[serve]` was installed. Restart it once from `simpler-rag/` with `uv run pxt daemon restart`, then run the cell again.
+
+### `pxt service update` says port 8000 is already in use
+
+An API from an earlier run is still serving. Stop it from `simpler-rag/` with `uv run pxt service stop rag`, then run the cell again.
 
 ### Duplicate rows
 
 `photo_id` is a primary key, so inserting the same photos twice fails with `Duplicate primary key` instead of adding copies. Run the notebook from the top: the reset cell starts it from empty tables.
 
-### Recipe 2 or the bonus fails
+### Answers are empty or the insert fails
 
-Set `OPENAI_API_KEY` in the environment where the `pxt` daemon runs. Restart the daemon if you set the key after it started.
+The notebook or the `pxt` daemon cannot find your OpenAI key. Put it in `~/.pixeltable/config.toml` as shown in Prerequisites, then run `uv run pxt daemon restart` from `simpler-rag/` and restart the kernel.
 
 ### The notebook kernel cannot import Pixeltable
 
@@ -180,7 +213,7 @@ Another virtual environment is active in the shell that started Jupyter or your 
 
 ### `!pxt` says command not found
 
-The notebook's shell cannot see `simpler-rag/.venv`. Start Jupyter with `uv run jupyter lab` from `simpler-rag/`, or select `simpler-rag/.venv` as the kernel in your editor.
+The notebook's shell cannot see `simpler-rag/.venv/bin`. Start Jupyter with `uv run jupyter lab` from `simpler-rag/`. Selecting `.venv` as the kernel in an editor does not always put `.venv/bin` on the shell path.
 
 ### CLIP or BLIP runs out of memory
 
@@ -190,16 +223,20 @@ Close other large programs. These models load locally with `torch` and `transfor
 
 ```
 simpler-rag/
-  rag-is-simpler.ipynb   # apply the recipes and inspect results
-  pyproject.toml         # dependencies and Pixeltable project config
-  uv.lock                # pinned versions for this tutorial
-  recipe1_fulltext.py    # photos: photo_id, image, title
-  recipe2_agentic.py     # queries: raw, first_keywords, first_hits, keywords, title_hits
-  recipe3_hybrid.py      # photos: adds caption and clip_idx
-  recipe5_tiers.py       # photos: adds hot; hot_photos view with hot_idx
-  recipe6_compare.py     # photos: adds clip_idx_v2
-  recipe6_cutover.py     # photos: drops clip_idx
-  bonus_answer.py        # queries: adds parts, photos_1, photos_2, answer
+  rag-is-simpler.ipynb     # apply the recipes and see the answers
+  pyproject.toml           # dependencies and Pixeltable project config
+  uv.lock                  # pinned versions for this tutorial
+  rag_udfs.py              # keyword matching, the answer prompt, merging photos
+  recipe1_fulltext.py      # photos; queries with hits and answer
+  recipe2_agentic.py       # queries: two keyword tries; hits searches titles
+  recipe3a_captions.py     # photos: caption and clip_idx
+  recipe3b_hybrid.py       # queries: hits from titles and captions, ranked by CLIP
+  recipe5a_tiers.py        # photos: hot
+  recipe5b_hot_search.py   # queries: hits from the hot photos only
+  recipe6a_compare.py      # photos: clip_idx_v2 next to clip_idx
+  recipe6b_cutover.py      # photos: drops clip_idx; queries: hits from every photo
+  bonus_multi.py           # queries: split the question, search both parts; the POST /ask route
+  images/                  # the notebook graphics: cold open, RAG steps, three knobs (sources in images/src)
 ```
 
 The sample images load from:
@@ -214,7 +251,7 @@ The local Pixeltable database is under `~/.pixeltable`.
 
 ### Adding Photos
 
-Insert rows with a new `photo_id` and an image path or URL. The title is optional. Pixeltable fills the caption and every index for the new rows.
+Insert rows with a new `photo_id` and an image path or URL. The title is optional. Pixeltable fills the caption and every index for the new rows. Questions asked after that can retrieve them. Pixeltable keeps the stored answers for earlier questions, so it does not call the models again for them. Run `pxt recompute` if you want those questions to search the new photos too.
 
 ### Changing a Recipe
 
@@ -227,8 +264,8 @@ Insert rows with a new `photo_id` and an image path or URL. The title is optiona
 
 ### Dependencies
 
-- Pixeltable 0.7.11 or newer: tables, views, computed columns, query columns, embedding indexes, and `pxt schema`
-- OpenAI: question rewriting, splitting, and the vision model answer
+- Pixeltable 0.7.14 or newer, with the `serve` extra: tables, computed columns, query columns, embedding indexes, `pxt schema`, `pxt recompute`, and `pxt service`
+- OpenAI: the answer in every recipe, question rewriting, and splitting
 - transformers and torch: BLIP captions and CLIP embeddings
 - JupyterLab, ipykernel, and ipywidgets: running the notebook
 

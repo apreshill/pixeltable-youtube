@@ -1,0 +1,9 @@
+{
+  "case_id": "coffee_flyer_generation",
+  "table": "generations",
+  "workflow": "marketing_flyer",
+  "gen_prompt": "Create a print-ready vertical A4 flyer for a coffee shop called Sunrise Coffee.\nUse a warm, cozy, minimal specialty coffee aesthetic (not cartoonish).\nRequired text (must be exact):\n- WINTER LATTE WEEK\n- Try our Cinnamon Oat Latte\n- 20% OFF - Mon-Thu\n- Order Ahead\n- 123 Market St - 7am-6pm\nDo not include any other words, prices, URLs, or QR codes.\n",
+  "prompt": "Create a print-ready vertical A4 flyer for a coffee shop called Sunrise Coffee.\nUse a warm, cozy, minimal specialty coffee aesthetic (not cartoonish).\nRequired text (must be exact):\n- WINTER LATTE WEEK\n- Try our Cinnamon Oat Latte\n- 20% OFF - Mon-Thu\n- Order Ahead\n- 123 Market St - 7am-6pm\nDo not include any other words, prices, URLs, or QR codes.\n",
+  "criteria": "All required text appears exactly as written and is legible.\nLayout reads clearly: shop name -> headline -> subheadline -> offer -> CTA -> footer.\nStyle matches warm, cozy, specialty coffee and is not cartoonish.\nNo extra text, watermarks, or irrelevant UI-like elements.",
+  "required_text_file": "required_text.json"
+}

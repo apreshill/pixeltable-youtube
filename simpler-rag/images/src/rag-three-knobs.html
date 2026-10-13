@@ -1,0 +1,60 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=block" rel="stylesheet">
+<style>
+:root { --paper:#FAFAF8; --ink:#0A0B0A; --ink-2:#4F4F4F; --ink-3:#8A857F; --rule:#E2E0DC; --card:#FFFFFF; --term:#0E0F0E; --term-line:#232523;
+  --t-text:#ECEAE5; --t-out:#B9B5AE; --t-dim:#6F6B66; --red:#DD2403; --yellow:#F2AA02; --blue-light:#7BA7EF;
+  --sans:"Inter Tight", ui-sans-serif, system-ui, sans-serif; --mono:"JetBrains Mono", ui-monospace, Menlo, monospace; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { background:var(--paper); }
+body { font-family:var(--sans); color:var(--ink); -webkit-font-smoothing:antialiased; width:1600px; padding:56px 64px 60px; }
+.top { display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:19px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); }
+.kicker { display:flex; align-items:center; gap:14px; }
+.pix { display:inline-flex; gap:5px; } .pix i { width:12px; height:12px; border-radius:3px; display:block; }
+.pix i:nth-child(1){background:var(--red);} .pix i:nth-child(2){background:var(--yellow);} .pix i:nth-child(3){background:var(--blue-light);}
+h1 { font-weight:600; letter-spacing:-0.035em; line-height:1.04; font-size:60px; margin-top:34px; text-wrap:balance; max-width:1300px; }
+.step { display:inline-flex; align-items:center; gap:12px; font-family:var(--mono); font-size:18px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; background:var(--ink); color:var(--paper); padding:8px 16px 8px 10px; border-radius:10px; }
+.step .n { background:var(--yellow); color:var(--ink); width:30px; height:30px; border-radius:7px; display:inline-flex; align-items:center; justify-content:center; }
+.dark .step { background:#1E201E; }
+code, .mono { font-family:var(--mono); font-variant-ligatures:none; }
+.callout { margin-top:28px; border:1.5px solid var(--rule); background:var(--card); border-radius:18px; padding:22px 28px; display:flex; gap:20px; align-items:center; }
+.callout .tag { flex:none; font-family:var(--mono); font-size:16px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink); background:var(--yellow); border-radius:7px; padding:6px 10px; }
+.callout p { font-size:25px; line-height:1.4; color:var(--ink-2); }
+.callout p b { color:var(--ink); font-weight:600; }
+</style></head><body>
+<style>
+.grid3 { display:grid; grid-template-columns:repeat(3, 1fr); gap:22px; margin-top:44px; align-items:stretch; }
+.knob { display:flex; flex-direction:column; background:var(--card); border:1.5px solid var(--rule); border-radius:22px; overflow:hidden; box-shadow:0 1px 0 rgba(0,0,0,.03), 0 24px 48px -32px rgba(10,11,10,.25); }
+.knob .hd { padding:24px 26px 20px; border-bottom:1.5px solid var(--rule); }
+.knob h2 { font-size:34px; font-weight:600; letter-spacing:-0.025em; line-height:1.1; margin-top:16px; min-height:75px; }
+.knob .lab { display:flex; justify-content:space-between; padding:12px 26px; font-family:var(--mono); font-size:14px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); border-bottom:1.5px solid var(--rule); background:#FBFAF7; }
+.opt { display:flex; justify-content:space-between; align-items:center; gap:14px; padding:17px 26px; font-size:23px; }
+.opt + .opt { border-top:1.5px solid var(--rule); }
+.opt .t { display:flex; flex-direction:column; gap:3px; }
+.opt .t small { font-family:var(--mono); font-size:15px; color:var(--ink-3); letter-spacing:.02em; }
+.recs { display:flex; gap:6px; flex:none; }
+.recs span { font-family:var(--mono); font-size:16px; font-weight:600; min-width:30px; height:30px; padding:0 8px; border-radius:7px; display:inline-flex; align-items:center; justify-content:center; background:var(--ink); color:var(--paper); }
+.recs span.b { background:var(--ink); color:var(--paper); }
+</style>
+<div class="top"><span class="kicker"><span class="pix"><i></i><i></i><i></i></span>The three knobs</span><span>RAG is simpler than you think</span></div>
+<h1>Each recipe turns one of three knobs on the retrieve step.</h1>
+<div class="grid3">
+  <div class="knob"><div class="hd"><span class="step"><span class="n">1</span>Knob</span><h2>What we search</h2></div>
+    <div class="lab"><span>Setting</span><span>Recipes</span></div>
+    <div class="opt"><span class="t">Text you already have<small>e.g., titles</small></span><span class="recs"><span>1</span><span>2</span></span></div>
+    <div class="opt"><span class="t">Text a model writes<small>e.g., captions</small></span><span class="recs"><span>3</span><span>4</span></span></div>
+    <div class="opt"><span class="t">Only the most-used data<small>e.g., the photos people view most</small></span><span class="recs"><span>5</span></span></div>
+    <div class="opt"><span class="t">All of the data, by meaning<small>e.g., every photo</small></span><span class="recs"><span>6</span><span class="b">Bonus</span></span></div></div>
+  <div class="knob"><div class="hd"><span class="step"><span class="n">2</span>Knob</span><h2>How the question becomes a search</h2></div>
+    <div class="lab"><span>Setting</span><span>Recipes</span></div>
+    <div class="opt"><span class="t">As typed<small>e.g., "any pets?"</small></span><span class="recs"><span>1</span><span>5</span><span>6</span></span></div>
+    <div class="opt"><span class="t">Rewritten into keywords<small>e.g., "pets dog"</small></span><span class="recs"><span>2</span><span>3</span><span>4</span></span></div>
+    <div class="opt"><span class="t">Split into parts<small>e.g., "flowers" and "a zebra"</small></span><span class="recs"><span class="b">Bonus</span></span></div></div>
+  <div class="knob"><div class="hd"><span class="step"><span class="n">3</span>Knob</span><h2>Embeddings</h2></div>
+    <div class="lab"><span>Setting</span><span>Recipes</span></div>
+    <div class="opt"><span class="t">None<small>keyword search only</small></span><span class="recs"><span>1</span><span>2</span></span></div>
+    <div class="opt"><span class="t">One model, for all the data<small>e.g., CLIP, for every photo</small></span><span class="recs"><span>3</span><span>5</span></span></div>
+    <div class="opt"><span class="t">Added when new data arrives<small>e.g., two new photos</small></span><span class="recs"><span>4</span></span></div>
+    <div class="opt"><span class="t">A newer model, side by side<small>e.g., a newer CLIP model</small></span><span class="recs"><span>6</span><span class="b">Bonus</span></span></div></div>
+</div>
+</body></html>

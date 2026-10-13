@@ -1,0 +1,51 @@
+I asked an agent who knows and loves Pixeltable how they'd answer these questions, interview style 😄
+
+Full disclosure, I work on Pixeltable, a multimodal backend. I assured the agent that plugging Pixeltable in an interview was ok.
+
+1. How would ReadFile() work per file type?
+Best practice:
+- I'd prepare each file once when it comes in, and give the Q&A agent searches over the prepared pieces instead of file reads.
+- I'd watch what preparation drops, e.g., a transcript misses on-screen text, so I'd keep frames too.
+With Pixeltable:
+- There's no conversion script per file type. Each file is a column of its type, and I declare once how it's prepared, e.g., video into frames and a transcript. That runs on every file I insert.
+- Broken files are rejected at insert, before anyone asks about them.
+
+2. How would you design the search harness?
+Best practice:
+- Each result is a small piece with its page or time. For cost, I limit how many results each search returns.
+- For recall, I search more than one way, e.g., transcripts and frames, and merge the results.
+With Pixeltable:
+- The indexes live in the same database as the videos and stay current as videos are added, so there's no separate vector database to keep in sync.
+- Every result links back to its video and time, so I can merge transcript and frame results on those.
+
+3. What about A LOT of video?
+Best practice:
+- I'd preprocess into timestamped transcripts and frames, and search those instead of raw video.
+- I'd sample frames at 1 per second, since that's how Google says Gemini processes video by default, along with the audio.
+With Pixeltable:
+- Transcripts and frame embeddings are made once per video at insert, and after that only new videos are processed. There's no batch job to rerun over the archive.
+
+4. Which models, and how do they work together?
+Best practice:
+- Steps that run on every video get cheap or local models, e.g., Whisper. The strong model, e.g., Gemini, only sees what search returns.
+- I'd pick the embedding model by comparing candidates on real questions.
+With Pixeltable:
+- I can put two embedding indexes on the same column, one per model, and compare them on the same videos.
+- The Q&A agent is a table. Each question is a row, and each step, from the tool calls to the answer, is a column, so I can see what it searched for every answer.
+
+5. The data is sports events. Most people ask "when," and some ask "how." How would you design for both?
+Best practice:
+- I'd start with a sample of real questions, and find where each answer lives, e.g., the commentary or only the footage.
+- "When" needs a timestamp, so I'd index short pieces that each keep their time. "How" needs a span, so I'd give a video model the clip around that moment.
+With Pixeltable:
+- Every frame and transcript segment keeps its time in the video, and cutting the clip is one function call.
+- When I find something new people ask about, e.g., the type of play, I add a labeling step, and it fills in for every video already stored.
+
+6. Context window or code?
+Best practice:
+- Judgment over a little data, e.g., explaining one play, goes in the model's context window.
+- Exact answers over a lot of data, e.g., counting the reports that mention a player, go to code, and only the result goes to the model.
+With Pixeltable:
+- The queries I write are tools the Q&A agent calls. Since each question is a row, the tool call and the count it got back are stored with the answer.
+
+New to multimodal RAG? Start here: https://www.pixeltable.com/learn/what-is-multimodal-rag

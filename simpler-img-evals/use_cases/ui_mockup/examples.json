@@ -1,0 +1,8 @@
+{
+  "case_id": "ui_checkout_mockup",
+  "table": "generations",
+  "workflow": "ui_mockup",
+  "gen_prompt": "Generate a high-fidelity mobile checkout screen for an ecommerce app.\nOrientation: portrait.\nScreen type: checkout / order review.\nUse the REQUIRED TEXT:\n- Checkout\n- Place Order\n- Edit Cart\nConstraints:\n- Order total appears directly above the primary CTA.\n- Primary CTA is the most visually prominent element.\n- Do not include popups, ads, marketing copy, or extra screens.\n- Do not include placeholder or lorem ipsum text.\n",
+  "prompt": "Generate a high-fidelity mobile checkout screen for an ecommerce app.\nOrientation: portrait.\nScreen type: checkout / order review.\nUse the REQUIRED TEXT:\n- Checkout\n- Place Order\n- Edit Cart\nConstraints:\n- Order total appears directly above the primary CTA.\n- Primary CTA is the most visually prominent element.\n- Do not include popups, ads, marketing copy, or extra screens.\n- Do not include placeholder or lorem ipsum text.\n",
+  "criteria": "The image clearly depicts a mobile checkout screen.\nAll required sections are present and visually distinct.\nUI elements look clickable/editable and follow common conventions.\nPrimary vs secondary actions are unambiguous.\nNo extra UI states, decorative noise, or placeholder text."
+}
