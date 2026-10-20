@@ -57,7 +57,7 @@ Write a README in the new folder for people watching the video. Use the same lay
 
 Do not document `uv init` or "add a new video" there.
 
-Pixeltable is the database. Schema files declare tables. The notebook is one surface for applying and inspecting them.
+Pixeltable is a multimodal backend. Name it only as `devrel-skills/profiles/pixeltable/positioning.md` does (its Names section); this repo keeps no positioning of its own. Schema files declare tables. The notebook is one surface for applying and inspecting them.
 
 ## Dependencies
 

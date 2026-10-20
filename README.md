@@ -2,7 +2,7 @@
 
 Code that goes with Pixeltable YouTube videos. Clone this repo to run a tutorial on your machine.
 
-Pixeltable is an OLTP database for multimodal AI applications. Media, model outputs, and app state live in one database and stay consistent as data changes.
+Pixeltable is the unified multimodal backend agents build with: the database, orchestration, and serving layers in one Python file. Media, model outputs, and app state live in one database and stay consistent as data changes.
 
 **Pixeltable:** [GitHub](https://github.com/pixeltable/pixeltable) · [Docs](https://docs.pixeltable.com/) · [YouTube](https://www.youtube.com/@PixeltableHQ)
 

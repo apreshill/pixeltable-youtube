@@ -4,7 +4,7 @@ Instructions for coding agents working in this repo.
 
 This repo is the local code for Pixeltable YouTube tutorials. People clone it to run a video's notebook on their machine.
 
-Pixeltable is an OLTP database. The catalog is the durable thing. The notebook, the Python SDK, the `pxt` CLI, and `pxt dashboard` are surfaces for the same catalog.
+Pixeltable is the unified multimodal backend agents build with: the database, orchestration, and serving layers in one Python file. The catalog is the durable thing. The notebook, the Python SDK, the `pxt` CLI, and `pxt dashboard` are surfaces for the same catalog.
 
 If you are adding a new tutorial folder, also read `AGENTS.producer.md`.
 
@@ -76,7 +76,7 @@ These videos are one catalog plus a notebook. A starter-kit app is a different p
 - Do not add a new video folder unless the user asks. See `AGENTS.producer.md`.
 - Do not put maintainer setup (`uv init`, `uv add`, `pxt init`) in the root README. That README is for people running a tutorial.
 - Do not commit `.venv` or `.env`.
-- Do not invent Pixeltable as a framework, backend, or data layer. It is a database.
+- Do not call Pixeltable a framework, platform, pipeline, orchestrator, data engine, data plane, or vector database. It is a multimodal backend.
 
 ## Troubleshooting
 
