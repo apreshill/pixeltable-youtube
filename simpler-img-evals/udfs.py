@@ -65,6 +65,31 @@ def edit_contents(
 
 
 @pxt.udf
+def edit_judge_content(
+    prompt: str,
+    criteria: str,
+    ref_image: Image.Image,
+    ref_image_2: Image.Image | None,
+    image: Image.Image,
+) -> list:
+    """The edit judge's message: the instruction, the input images, then the edited result.
+
+    An edit can only be graded against what it started from, so the judge sees the
+    reference images too. The second reference is optional (try-on uses two, a logo edit one).
+    """
+    content: list = [{'type': 'input_text', 'text': f'Prompt:\n{prompt}\n\nCriteria:\n{criteria}'}]
+    refs = [ref_image] if ref_image_2 is None else [ref_image, ref_image_2]
+    labels = ['Input image, before the edit:'] if len(refs) == 1 else ['First input image:', 'Second input image:']
+    for label, ref in zip(labels, refs):
+        content += [{'type': 'input_text', 'text': label}, {'type': 'input_image', 'image_url': ref}]
+    content += [
+        {'type': 'input_text', 'text': 'Edited result to score:'},
+        {'type': 'input_image', 'image_url': image},
+    ]
+    return content
+
+
+@pxt.udf
 def judge_instructions(workflow: str) -> str:
     return _rubric(workflow).SYSTEM_PROMPT
 
@@ -113,7 +138,10 @@ async def extract_flyer_text(image: Image.Image, workflow: str, judge_model: str
         model=judge_model,
         model_kwargs={'instructions': _OCR_INSTRUCTIONS},
     )
-    text = raw.get('output_text') if isinstance(raw, dict) else None
+    # output_text is an SDK convenience property, not a field of the stored response:
+    # the text is in the message item's content.
+    messages = [o for o in (raw or {}).get('output') or [] if o.get('type') == 'message']
+    text = messages[0]['content'][0].get('text') if messages and messages[0].get('content') else None
     if not text:
         return []
     return [line.strip() for line in text.splitlines() if line.strip()]

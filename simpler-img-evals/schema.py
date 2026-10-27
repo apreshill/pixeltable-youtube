@@ -93,7 +93,7 @@ class GenEvals(TableModel, name='gen_evals', base=Generations.where(Generations.
             'text': udfs.judge_text_format(Generations.workflow),
         },
     )
-    scores = udfs.parse_json(judge_raw.output_text)
+    scores = udfs.parse_json(judge_raw.output.filter(lambda o: o.type == 'message')[0].content[0].text)
     judge_verdict = scores.verdict
     reason = scores.reason
 
@@ -110,10 +110,9 @@ class EditEvals(TableModel, name='edit_evals', base=Edits.where(Edits.eval_ready
         [
             {
                 'role': 'user',
-                'content': [
-                    {'type': 'input_text', 'text': udfs.judge_user_text(Edits.prompt, Edits.criteria)},
-                    {'type': 'input_image', 'image_url': Edits.image},
-                ],
+                'content': udfs.edit_judge_content(
+                    Edits.prompt, Edits.criteria, Edits.ref_image, Edits.ref_image_2, Edits.image
+                ),
             }
         ],
         model=JUDGE_MODEL,
@@ -122,7 +121,7 @@ class EditEvals(TableModel, name='edit_evals', base=Edits.where(Edits.eval_ready
             'text': udfs.judge_text_format(Edits.workflow),
         },
     )
-    scores = udfs.parse_json(judge_raw.output_text)
+    scores = udfs.parse_json(judge_raw.output.filter(lambda o: o.type == 'message')[0].content[0].text)
     judge_verdict = scores.verdict
     reason = scores.reason
 
