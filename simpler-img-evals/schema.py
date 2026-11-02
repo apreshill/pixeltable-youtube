@@ -74,7 +74,7 @@ class Edits(TableModel, name='edits'):
     ).candidates[0].content.parts[0].inline_data.data.astype(pxt.Image)
 
 
-class GenEvals(TableModel, name='gen_evals', base=Generations.where(Generations.eval_ready == True)):  # noqa: E712
+class GenEvals(TableModel, name='gen_evals', base=Generations.where(Generations.eval_ready == True)):
     """Judge view for generations, including the marketing exact-text check."""
 
     judge_raw = pxtf.openai.responses(
@@ -103,7 +103,7 @@ class GenEvals(TableModel, name='gen_evals', base=Generations.where(Generations.
     tags = udfs.failure_tags(Generations.workflow, scores, text_check)
 
 
-class EditEvals(TableModel, name='edit_evals', base=Edits.where(Edits.eval_ready == True)):  # noqa: E712
+class EditEvals(TableModel, name='edit_evals', base=Edits.where(Edits.eval_ready == True)):
     """Judge view for edits. No exact-text check."""
 
     judge_raw = pxtf.openai.responses(
