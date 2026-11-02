@@ -30,8 +30,12 @@ ART_TEMPLATE = (
 )
 MOTION_TEMPLATE = (
     'Animate this picture as one 5-second shot. The picture shows: {scene} '
-    'Use one slow, steady camera move for the whole shot, a drift or a push in. '
-    'Everything in the picture that would move in real life moves clearly the whole time, and the light shifts a little. '
+    'The camera pushes in slowly for the whole shot, with no panning. '
+    'What is already in the picture comes alive and keeps moving clearly the whole time, in whatever ways fit it: '
+    'grass and leaves sway in a breeze, shadows of clouds already in the sky drift across the ground, '
+    'water flows, stars and moons pulse brighter and dimmer. '
+    'Every moving element is subtle and realistic but still noticeable, '
+    'and each one moves at its own random pace and timing, never in step with the others. '
     'Keep its style and colors. '
     'Add nothing that is not already in the picture. '
     'Keep the pink {issue_label} and the newsletter name exactly where they are, sharp and unchanged.'

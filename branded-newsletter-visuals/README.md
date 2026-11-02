@@ -127,7 +127,7 @@ The notebook or the `pxt` daemon cannot find `GEMINI_API_KEY`. Put the key in `~
 
 ### A video cell holds an error
 
-Omni sometimes stalls. `animate_cover` gives up after `VIDEO_TIMEOUT_SECONDS` (180) in `udfs.py`, and because the notebook inserts with `on_error='ignore'`, the row keeps its picture and cover with the error in `video`. Rerun only the failed videos:
+Omni allows only a few requests a minute and a small number a day, so a video call can fail on a rate limit (429). Because the notebook inserts with `on_error='ignore'`, the row keeps its picture and cover with the error in `video`. Rerun only the failed videos:
 
 ```python
 issues.recompute_columns('video', errors_only=True)

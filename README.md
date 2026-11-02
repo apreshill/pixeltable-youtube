@@ -81,6 +81,8 @@ Each video has its own README with recipes, expected output, and troubleshooting
 - [`simpler-rag`](simpler-rag/README.md)
 - [`simpler-mcp`](simpler-mcp/README.md)
 - [`simpler-img-evals`](simpler-img-evals/README.md)
+- [`branded-newsletter-visuals`](branded-newsletter-visuals/README.md)
+- [`nemotron-transcribe`](nemotron-transcribe/README.md)
 
 ## Expected Output
 
@@ -138,6 +140,18 @@ pixeltable-youtube/
     udfs.py
     scripts/
     use_cases/
+  branded-newsletter-visuals/
+    README.md
+    branded-newsletter-visuals.ipynb
+    schema.py
+    udfs.py
+    sample_issues.py
+    fonts/
+  nemotron-transcribe/
+    README.md
+    nemotron-transcribe.ipynb
+    schema.py
+    udfs.py
 ```
 
 The local Pixeltable catalog is under `~/.pixeltable`. It is not stored in this repo.
@@ -166,3 +180,5 @@ In `simpler-rag`, run the notebook from the top. The reset cell after `uv sync` 
 - [`simpler-rag` README](simpler-rag/README.md)
 - [`simpler-mcp` README](simpler-mcp/README.md)
 - [`simpler-img-evals` README](simpler-img-evals/README.md)
+- [`branded-newsletter-visuals` README](branded-newsletter-visuals/README.md)
+- [`nemotron-transcribe` README](nemotron-transcribe/README.md)
