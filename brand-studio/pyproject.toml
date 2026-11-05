@@ -1,0 +1,28 @@
+[project]
+name = "brand-studio"
+version = "0.1.0"
+description = "A brand kit in Pixeltable: palettes, fonts, logos, and style guides, and every asset built from it."
+requires-python = ">=3.11"
+dependencies = [
+    "google-genai>=2.33.0",
+    "ipykernel>=7.4.0",
+    "ipywidgets>=8.1.9",
+    "jupyterlab>=4.6.5",
+    "pillow>=13.0.0",
+    "pixeltable>=0.7.23",
+    "scipy>=1.17.1",
+]
+
+[project.optional-dependencies]
+local = [
+    "accelerate==1.13.0",
+    "diffusers==0.37.1",
+    "ollama==0.6.2",
+    "torch>=2.15.0",
+    "transformers==4.56.2",
+]
+
+[[tool.pixeltable.database]]
+# The local database. vars.<name> sets the value of the ConfigVar called <name>, for example:
+# vars.media_dest = 's3://bucket/prefix'
+# A hosted database gets a second entry, with name = 'pxt://org:db'.

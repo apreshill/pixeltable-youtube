@@ -14,16 +14,16 @@ The grading runs three checks in order, following the OpenAI cookbook.
 2. Graded scores next. For the images that clear the gates, score quality from 0 to 5 so you can rank them.
 3. Failure tags last. Label how an image failed, for example `text_garbled` or `identity_drift`, so the next fix has a target.
 
-The demo grades four kinds of images. Two are made from a prompt, and two are edits of reference images. The last column says which recipe in [`demo.ipynb`](demo.ipynb) shows each one.
+The demo grades four kinds of images. Two are made from a prompt, and two are edits of reference images. The last column says which recipe in [`image-evals-simpler.ipynb`](image-evals-simpler.ipynb) shows each one.
 
 | Job | Folder | Table | Produced by | Notebook recipe |
 |-----|--------|-------|-------------|-----------------|
 | Mobile UI mockup | [`use_cases/ui_mockup/`](use_cases/ui_mockup/) | generations | `openai.image_generations` | 1 |
 | Marketing flyer | [`use_cases/marketing_flyer/`](use_cases/marketing_flyer/) | generations | `openai.image_generations` | 1 and 2 |
-| Virtual try-on | [`use_cases/virtual_try_on/`](use_cases/virtual_try_on/) | edits | `gemini.generate_content`, two images | 4 |
-| Logo edit | [`use_cases/logo_edit/`](use_cases/logo_edit/) | edits | `gemini.generate_content`, one image | 3 |
+| Virtual try-on | [`use_cases/virtual_try_on/`](use_cases/virtual_try_on/) | edits | `gemini.generate_content`, two images | 3 |
+| Logo edit | [`use_cases/logo_edit/`](use_cases/logo_edit/) | edits | `gemini.generate_content`, one image | 3 and 4 |
 
-Recipe 5 re-grades the images from Recipe 1. Open a job folder's README for that job's inputs, pass rules, and sample commands. You can ignore the other three if you only care about one.
+Recipe 4 tightens the logo rubric and re-grades without making new images. Open a job folder's README for that job's inputs, pass rules, and sample commands. You can ignore the other three if you only care about one.
 
 ## Technical Architecture
 
@@ -58,7 +58,7 @@ The inputs you insert are mutable. You can call `update(...)` to change a prompt
 
 Each row has two prompt fields. `gen_prompt` is sent to the image model. `prompt` is the instruction shown to the judge. They often hold the same text. You can set them apart when you want the judge to grade against different wording than the model saw.
 
-The judge output is stored with each row. To re-grade after you change a rubric, recompute the `judge_raw` column on the view, as shown in [`demo.ipynb`](demo.ipynb). A re-grade makes judge calls only. The images are not made again, so it makes no image calls.
+The judge output is stored with each row. To re-grade after you change a rubric, recompute the `judge_raw` column on the view, as shown in [`image-evals-simpler.ipynb`](image-evals-simpler.ipynb). A re-grade makes judge calls only. The images are not made again, so it makes no image calls.
 
 Editing uses Gemini. `generate_content` accepts several reference images in one call, which virtual try-on needs, because it passes both the person and the garment. The built-in Pixeltable function for OpenAI image edits takes a single image.
 
@@ -118,7 +118,7 @@ Run Jupyter from this folder so `pxt schema` can find `schema.py` and Python can
 uv run jupyter lab
 ```
 
-Open `demo.ipynb`. In Jupyter, Cursor, or VS Code, pick the `simpler-img-evals` kernel. The first code cell is:
+Open `image-evals-simpler.ipynb`. In Jupyter, Cursor, or VS Code, pick the `simpler-img-evals` kernel. The first code cell is:
 
 ```python
 !uv sync
@@ -156,7 +156,7 @@ The seed cell inserts four rows and generates four images. Grading calls the jud
 
 ## Run the Demo
 
-Run `demo.ipynb` from top to bottom.
+Run `image-evals-simpler.ipynb` from top to bottom.
 
 1. `!uv sync`
 2. `pxt schema diff schema.py img_eval`
@@ -174,7 +174,7 @@ To browse the rows and images in a browser, run `uv run pxt dashboard` from this
 ```text
 simpler-img-evals/
   README.md
-  demo.ipynb
+  image-evals-simpler.ipynb
   pyproject.toml
   uv.lock
   schema.py
@@ -224,7 +224,7 @@ Run `uv sync` from `simpler-img-evals/`, register the kernel (Setup step 3), the
 
 ### The seed script says the batch is already loaded
 
-`scripts/seed_demo.py` skips the insert when `demo_v1` is already in the tables. Delete that batch with the notebook's last cell, "Delete the sample rows". Or run `pxt.drop_dir('img_eval', force=True)` yourself, as in the section above, and run the notebook again from the schema cells. That deletes the old `img_eval` tables and every image and grade in them.
+`scripts/seed_demo.py` skips the insert when `demo_v1` is already in the tables. Delete that batch with the notebook's last cell, "Put the rubric back and delete the sample rows". Or run `pxt.drop_dir('img_eval', force=True)` yourself, as in the section above, and run the notebook again from the schema cells. That deletes the old `img_eval` tables and every image and grade in them.
 
 ### Images or verdicts are empty
 

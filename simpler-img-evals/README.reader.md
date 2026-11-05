@@ -1,6 +1,6 @@
 # Reader brief: Image Evals Are Simpler Than You Think
 
-Covers the video, `README.md`, and `demo.ipynb`. From `profiles/pixeltable/users.md`.
+Covers the video, `README.md`, and `image-evals-simpler.ipynb`. From `profiles/pixeltable/users.md`.
 
 ## 1. Reader
 
