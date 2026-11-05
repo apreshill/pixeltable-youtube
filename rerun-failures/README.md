@@ -6,16 +6,16 @@ It answers two questions from people running big image jobs. If a run stops part
 
 ## Overview
 
-1. A default insert stops at the first failed photo and saves none of the batch.
+1. By default, an insert saves all of its rows or none, so one failed photo means none of the batch is saved.
 2. `on_error='ignore'`, with photos inserted 200 at a time, keeps going past failures. If the run stops, the chunks that finished stay saved.
 3. `avg_color.errortype` and `avg_color.errormsg` show which photos failed and why. `pxt errors` lists the same failures from the command line.
 4. `recompute_columns('avg_color', errors_only=True)` reruns only the failed rows, along with the columns built on them.
 
 | Failure | Photos | Fix |
 |---|---|---|
-| Timeout | 30 (about 1 in 50) | retry with `errors_only=True` |
+| Timeout, from the stand-in | 30 (about 1 in 50) | retry with `errors_only=True` |
 | Grayscale photo | 28 | change the column in `schema_rgb.py`, then retry with `errors_only=True` |
-| Not an image | 1 | delete the row, or `update` it with a good file |
+| Not an image | 1 | delete the row |
 
 ## Technical Architecture
 
@@ -36,7 +36,7 @@ The photos are 1,673 small ImageNet images (Imagenette, 160 pixels) from the Pix
 
 `https://raw.githubusercontent.com/pixeltable/pixeltable/main/tests/data/imagenette2-160/`
 
-28 of them are grayscale, and `bad_image.JPEG` is a short text file with an image's name.
+28 of them are grayscale, and `bad_image.JPEG` is 29 bytes of text with a `.JPEG` name.
 
 ## Prerequisites
 
@@ -105,7 +105,7 @@ After all 1,673 photos are in, the failures grouped by error type look like this
 3                 NaN    1614
 ```
 
-After the first `errors_only=True` retry, the timeouts are gone and 1,644 photos have a color. After `schema_rgb.py` and the second retry, 1,672 do. Deleting `bad_image.JPEG` leaves 1,672 photos and 0 failures.
+The first `errors_only=True` retry reruns 59 rows, not 1,673. After it, the timeouts are gone and 1,644 photos have a color. After `schema_rgb.py` and the second retry, 1,672 do. Deleting `bad_image.JPEG` leaves 1,672 photos and 0 failures.
 
 If you stop the chunked insert partway, the timeout count can come out a few lower. The stand-in remembers every photo it timed out, including photos in the chunk you stopped, and it times out each photo only once.
 
