@@ -30,9 +30,14 @@ The work:
   clip for glitches.
 - `reels`: one row per cut. The approved clips, in the order you list them.
 
+Every model call goes through four helpers below, and MODELS picks the models.
+'local' runs everything on this machine for free: Stable Diffusion for images,
+and Ollama for text and reviews. 'gemini' calls the Gemini API, which costs money.
+
 Apply with:
 
-    pxt schema update schema.py studio -f
+    pxt schema update schema.py studio_local -f   # MODELS = 'local'
+    pxt schema update schema.py studio -f         # MODELS = 'gemini'
 """
 
 import pixeltable as pxt
@@ -41,6 +46,12 @@ import pixeltable.functions as pxtf
 import udfs
 
 TableModel = pxt.model_base()
+
+MODELS = 'local'  # 'local' is free, on this machine. 'gemini' calls the Gemini API and costs money.
+LOCAL = MODELS == 'local'
+
+LOCAL_TEXT_MODEL = 'llama3.2'  # Ollama
+LOCAL_VISION_MODEL = 'llava:7b'  # Ollama
 
 TEXT_MODEL = 'gemini-3.8-flash'
 REVIEW_MODEL = 'gemini-3.1-pro-preview'  # reads small letters more reliably
@@ -51,6 +62,39 @@ EMBED_MODEL = 'gemini-embedding-2'
 
 def _json_config(schema: dict) -> dict:
     return {'response_mime_type': 'application/json', 'response_json_schema': schema}
+
+
+def ask_json(prompt, schema: dict):
+    """A model's answer as JSON that follows the schema."""
+    if LOCAL:
+        return udfs.local_json(prompt, schema, model=LOCAL_TEXT_MODEL)
+    response = pxtf.gemini.generate_content(prompt, model=TEXT_MODEL, config=_json_config(schema))
+    return udfs.parse_json(response.candidates[0].content.parts[0].text.astype(pxt.String))
+
+
+def make_image(parts, short, aspect_ratio, start=None, strength: float = 0.6):
+    """An image. Gemini gets the full input with its reference pictures. A local model gets the short prompt,
+    and, for an edit, the picture to start from."""
+    if LOCAL:
+        return udfs.local_image(short, aspect_ratio, start, strength)
+    return udfs.first_image(pxtf.gemini.generate_content(parts, model=IMAGE_MODEL, config=udfs.image_config(aspect_ratio)))
+
+
+def review_image(image, prompt):
+    """The brand reviewer's verdict on an image, as JSON. Empty when there is no image."""
+    if LOCAL:
+        return udfs.local_review(image, prompt, udfs.REVIEW_SCHEMA, model=LOCAL_VISION_MODEL)
+    response = pxtf.gemini.generate_content(
+        udfs.review_input(image, prompt), model=REVIEW_MODEL, config=_json_config(udfs.REVIEW_SCHEMA)
+    )
+    return udfs.parse_optional_json(response.candidates[0].content.parts[0].text.astype(pxt.String | None))
+
+
+def embedding():
+    """The embedding behind library search."""
+    if LOCAL:
+        return pxtf.huggingface.clip.using(model_id='openai/clip-vit-base-patch32')
+    return pxtf.gemini.embed_content.using(model=EMBED_MODEL)
 
 
 # ---------------------------------------------------------------------------
@@ -71,10 +115,7 @@ class Brands(TableModel, name='brands'):
     logo_light: pxt.Image
     style_guide: pxt.String  # the brand book, in Markdown
 
-    art_direction_response = pxtf.gemini.generate_content(
-        udfs.art_direction_prompt(style_guide), model=TEXT_MODEL, config=_json_config(udfs.ART_DIRECTION_SCHEMA)
-    )
-    art_direction = udfs.parse_json(art_direction_response.candidates[0].content.parts[0].text.astype(pxt.String))
+    art_direction = ask_json(udfs.art_direction_prompt(style_guide), udfs.ART_DIRECTION_SCHEMA)
     brand_board = udfs.brand_board(name, category, palette, type_spec, headline_font, accent_font, body_font, logo_dark)
 
 
@@ -83,7 +124,7 @@ class Library(TableModel, name='library'):
     note: pxt.String
     image: pxt.Image
 
-    __indexes__ = [pxt.EmbeddingIndex(image, embedding=pxtf.gemini.embed_content.using(model=EMBED_MODEL), name='library_idx')]
+    __indexes__ = [pxt.EmbeddingIndex(image, embedding=embedding(), name='library_idx')]
 
 
 @pxt.query
@@ -121,12 +162,9 @@ class Products(TableModel, name='products'):
     photo: pxt.Image | None  # optional: a phone photo of the real product
 
     style = brand_style(brand)
-    packshot_response = pxtf.gemini.generate_content(
-        udfs.packshot_input(name, packaging, brand_visuals(brand), style, photo),
-        model=IMAGE_MODEL,
-        config={'response_modalities': ['IMAGE'], 'image_config': {'aspect_ratio': '1:1', 'image_size': '2K'}},
+    packshot = make_image(
+        udfs.packshot_input(name, packaging, brand_visuals(brand), style, photo), udfs.short_packshot(packaging, style), '1:1'
     )
-    packshot = udfs.first_image(packshot_response)
 
 
 @pxt.query
@@ -241,14 +279,12 @@ class Campaigns(TableModel, name='campaigns'):
 
     # One set for the whole campaign, designed from the brand kits and photographed empty.
     world_prompt = udfs.fill(rules.set_prompt, context)
-    world_response = pxtf.gemini.generate_content(world_prompt, model=TEXT_MODEL, config=_json_config(udfs.WORLD_SCHEMA))
-    world = udfs.parse_json(world_response.candidates[0].content.parts[0].text.astype(pxt.String))
+    world = ask_json(world_prompt, udfs.WORLD_SCHEMA)
     set_context = udfs.with_world(context, world)
     plate_prompt = udfs.fill(rules.plate_prompt, set_context)
-    plate_response = pxtf.gemini.generate_content(
-        udfs.plate_input(plate_prompt, brand_references(brand, brief, 2)), model=IMAGE_MODEL, config=udfs.image_config('9:16')
+    plate = make_image(
+        udfs.plate_input(plate_prompt, brand_references(brand, brief, 2)), udfs.short_prompt('plate', set_context), '9:16'
     )
-    plate = udfs.first_image(plate_response)
 
 
 class Shots(TableModel, name='shots', base=Campaigns, iterator=pxtf.json.list_iterator(moment=Campaigns.moments)):
@@ -258,21 +294,23 @@ class Shots(TableModel, name='shots', base=Campaigns, iterator=pxtf.json.list_it
 
     # 1. The moment with its surface still blank: a plain doormat, a fogged mirror, an empty floor.
     base_prompt = udfs.fill(Campaigns.rules.base_prompt, shot_context)
-    base_response = pxtf.gemini.generate_content(
+    base = make_image(
         udfs.shot_input(base_prompt, Campaigns.plate, Campaigns.products, spec),
-        model=IMAGE_MODEL,
-        config=udfs.image_config(spec.aspect_ratio),
+        udfs.short_prompt('base', shot_context),
+        spec.aspect_ratio,
+        start=Campaigns.plate,  # a local model starts from the empty room
+        strength=0.75,
     )
-    base = udfs.first_image(base_response)
 
     # 2a. AI letters: the image model edits the words into that photo.
     letter_prompt = udfs.fill(Campaigns.rules.letter_prompt, shot_context)
-    still_response = pxtf.gemini.generate_content(
+    still = make_image(
         udfs.letter_input(letter_prompt, base, brand_visuals(Campaigns.brand), brand_visuals(Campaigns.partner)),
-        model=IMAGE_MODEL,
-        config=udfs.image_config(spec.aspect_ratio),
+        udfs.short_prompt('letters', shot_context),
+        spec.aspect_ratio,
+        start=base,
+        strength=0.45,
     )
-    still = udfs.first_image(still_response)
 
     # 2b. Code letters: the exact logo files set into the same photo. Empty for moments with no compositor.
     composite = udfs.lay_letters(
@@ -281,32 +319,29 @@ class Shots(TableModel, name='shots', base=Campaigns, iterator=pxtf.json.list_it
 
     # The brand gate, the same for both versions: Gemini reads every word.
     review_prompt = udfs.fill(Campaigns.rules.review_prompt, shot_context)
-    review_response = pxtf.gemini.generate_content(
-        udfs.review_input(still, review_prompt), model=REVIEW_MODEL, config=_json_config(udfs.REVIEW_SCHEMA)
-    )
-    review = udfs.parse_json(review_response.candidates[0].content.parts[0].text.astype(pxt.String))
+    review = review_image(still, review_prompt)
     approved = udfs.verdict(review)  # a plain column, so you can filter and rerun on it
-    composite_review_response = pxtf.gemini.generate_content(
-        udfs.review_input(composite, review_prompt), model=REVIEW_MODEL, config=_json_config(udfs.REVIEW_SCHEMA)
-    )
-    composite_review = udfs.parse_optional_json(
-        composite_review_response.candidates[0].content.parts[0].text.astype(pxt.String | None)
-    )
+    composite_review = review_image(composite, review_prompt)
     composite_approved = udfs.verdict(composite_review)
 
     # The version that ships, and its clip.
     version = udfs.pick_version(approved, composite_approved)
     final = udfs.pick(version, still, composite)
-    clip = udfs.animate(final, spec, Campaigns.clips, model=VIDEO_MODEL)
+    clip = udfs.animate(final, spec, False if LOCAL else Campaigns.clips, model=VIDEO_MODEL)  # no local video model
 
     # The same gate for motion: Gemini watches the clip for glitches and for words that drift.
     clip_review_prompt = udfs.fill(Campaigns.rules.clip_review_prompt, shot_context)
-    clip_review_response = pxtf.gemini.generate_content(
-        udfs.clip_review_input(clip, clip_review_prompt), model=REVIEW_MODEL, config=_json_config(udfs.CLIP_REVIEW_SCHEMA)
-    )
-    clip_review = udfs.parse_optional_json(
-        clip_review_response.candidates[0].content.parts[0].text.astype(pxt.String | None)
-    )
+    if LOCAL:
+        clip_review = udfs.no_review(clip)
+    else:
+        clip_review = udfs.parse_optional_json(
+            pxtf.gemini.generate_content(
+                udfs.clip_review_input(clip, clip_review_prompt), model=REVIEW_MODEL, config=_json_config(udfs.CLIP_REVIEW_SCHEMA)
+            )
+            .candidates[0]
+            .content.parts[0]
+            .text.astype(pxt.String | None)
+        )
     clip_approved = udfs.verdict(clip_review)
 
 

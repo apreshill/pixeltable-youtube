@@ -271,8 +271,8 @@ def with_world(context: pxt.Json, world: pxt.Json) -> pxt.Json:
     """The campaign slots plus {world}: the set the designer returned, as prompt lines."""
     lines = [
         f"The set: {world['set']}",
-        'Colors: ' + '; '.join(f"{c['name']} {c['hex']} on {c['where']}" for c in world['palette']) + '.',
-        f"Materials: {', '.join(world['materials'])}. Hardware: {world['hardware']}.",
+        'Colors: ' + '; '.join(f"{c.get('name', '')} {c.get('hex', '')} on {c.get('where', '')}" for c in world['palette']) + '.',
+        f"Materials: {', '.join(map(str, world['materials']))}. Hardware: {world['hardware']}.",
         f"Light: {world['light']}",
     ]
     return {**context, 'world': '\n'.join(lines), 'styling': world['styling']}
@@ -532,12 +532,11 @@ def _tiles(gray):
     return np.where(keep[labels], labels, 0), grout
 
 
-def _inlay(base: Image.Image, lockup: Image.Image, width: float = 0.78, seed: int = 7) -> Image.Image:
-    """Inlay the wordmarks into a tiled floor, the way a stone setter would.
+def _mosaic(base: Image.Image, lockup: Image.Image, width: float = 0.8, seed: int = 7) -> Image.Image:
+    """Mosaic lettering: the wordmarks spelled out in whole tiles of the floor's own grid, in each brand's ink.
 
-    Each letter is one piece of matte tile in its brand's color, cut to the exact logo shape, with a fine
-    joint around it where the floor tiles were cut to fit. The letters take the floor's own light, so a
-    patch of sun across the floor crosses them too.
+    A tile joins a letter when the lettering covers at least half of it, and no stroke is thinner than one
+    tile. Each letter tile keeps the original tile's light and texture, recolored.
     """
     import numpy as np
     from scipy import ndimage as ndi
@@ -545,8 +544,9 @@ def _inlay(base: Image.Image, lockup: Image.Image, width: float = 0.78, seed: in
     rgb = np.asarray(base.convert('RGB')).astype(np.float32)
     gray = rgb @ np.array([0.299, 0.587, 0.114], np.float32)
     labels, grout = _tiles(gray)
-    area = np.bincount(labels.ravel())[1:]
-    pitch = np.sqrt(np.median(area[area > 0]))
+    n = labels.max() + 1
+    area = np.bincount(labels.ravel(), minlength=n).astype(np.float32)
+    pitch = np.sqrt(np.median(area[1:][area[1:] > 0])) * 1.12  # a tile plus its grout
 
     # Place the lettering in the middle of the tiled floor.
     ys, xs = np.nonzero(labels)
@@ -558,30 +558,34 @@ def _inlay(base: Image.Image, lockup: Image.Image, width: float = 0.78, seed: in
     placed = Image.new('RGBA', base.size, (0, 0, 0, 0))
     placed.alpha_composite(lockup.resize((mw, mh), Image.LANCZOS), (left, top))
     placed = np.asarray(placed).astype(np.float32)
-    alpha, color = placed[..., 3:] / 255, placed[..., :3]
+    inside = placed[..., 3] > 127
 
-    # The floor's light without its grid: blur away the grout, keep the gradients and the sun.
-    floor = gray[labels > 0].mean()
-    light = ndi.gaussian_filter(np.where(grout, floor, gray), pitch) / floor
-    rng = np.random.default_rng(seed)
-    grain = ndi.gaussian_filter(rng.normal(0, 7, gray.shape), 1.0)[..., None]  # matte, fine-grained
-    # Each piece has a slightly eased edge: the top edges catch the light, the bottom edges fall into shadow.
-    soft = ndi.gaussian_filter(alpha[..., 0], max(1.0, pitch * 0.04))
-    bevel = ndi.sobel(soft, axis=0)[..., None] * 60
-    letter = color * light[..., None] + grain + bevel
-    out = rgb * (1 - alpha) + letter * alpha
+    # No stroke thinner than one tile.
+    stroke = 2 * np.percentile(ndi.distance_transform_edt(inside)[inside], 95)
+    if stroke < pitch:
+        grown = ndi.distance_transform_edt(~inside) <= (pitch - stroke) / 2
+        nearest = ndi.distance_transform_edt(~inside, return_distances=False, return_indices=True)
+        placed = placed[nearest[0], nearest[1]]  # each new pixel takes the color of the letter it grew from
+        inside = grown
 
-    # A fine joint around every letter, in the floor's grout color, where the floor tiles were cut to fit.
-    solid = alpha[..., 0] > 0.5
-    joint = max(2.5, pitch * 0.07)
-    ring = (ndi.distance_transform_edt(~solid) <= joint) & ~solid
-    ring = ndi.gaussian_filter(ring.astype(np.float32), 0.7)[..., None]
-    grout_color = np.median(rgb[grout], axis=0) * light[..., None]
-    out = out * (1 - ring) + grout_color * ring
+    # A tile joins a letter when the lettering covers at least half of it, and takes that letter's ink.
+    covered = np.bincount(labels.ravel(), weights=inside.ravel().astype(np.float32), minlength=n)
+    letter = covered / np.maximum(area, 1) >= 0.5
+    letter[0] = False
+    ink = np.stack(
+        [np.bincount(labels.ravel(), weights=(placed[..., c] * inside).ravel(), minlength=n) for c in range(3)], axis=1
+    ) / np.maximum(covered, 1)[:, None]
+
+    # Recolor: the ink, shaded by the tile's own light and texture, with a little tile-to-tile variation.
+    tile_mean = np.bincount(labels.ravel(), weights=gray.ravel(), minlength=n) / np.maximum(area, 1)
+    shade = gray / np.maximum(tile_mean[labels], 1)
+    jitter = np.random.default_rng(seed).uniform(0.95, 1.05, n).astype(np.float32)
+    recolored = ink[labels] * (shade * jitter[labels])[..., None]
+    out = np.where(letter[labels][..., None], recolored, rgb)
     return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8))
 
 
-COMPOSITORS = {'inlay': _inlay}
+COMPOSITORS = {'mosaic': _mosaic}
 
 
 @pxt.udf
@@ -598,6 +602,116 @@ def lay_letters(
     kits = [(visuals, style)] + ([(partner_visuals, partner)] if partner_visuals else [])
     lockup = _lockup([v['logo'] for v, _ in kits], [_color(s['palette'], 'ink') for _, s in kits])
     return COMPOSITORS[method](base, lockup)
+
+
+# ---------------------------------------------------------------------------
+# Local models, for iterating for free. Stable Diffusion runs on the Mac's GPU, and
+# Ollama runs a small text model and a small vision model. They are far weaker than
+# Gemini; they exercise the whole system, not the final look.
+# ---------------------------------------------------------------------------
+
+LOCAL_IMAGE_MODEL = 'stabilityai/stable-diffusion-2-1'
+_LOCAL_SIZES = {'9:16': (432, 768), '1:1': (640, 640), '4:5': (576, 720), '16:9': (768, 432)}
+_pipelines: dict = {}
+
+
+def _local_pipeline(edit: bool):
+    """Load Stable Diffusion once per process. The edit pipeline shares the same weights."""
+    if 'text' not in _pipelines:
+        import torch
+        from diffusers import AutoPipelineForText2Image
+
+        device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+        dtype = torch.float16 if device == 'mps' else torch.float32
+        pipe = AutoPipelineForText2Image.from_pretrained(LOCAL_IMAGE_MODEL, torch_dtype=dtype).to(device)
+        pipe.set_progress_bar_config(disable=True)
+        _pipelines['text'] = pipe
+    if edit and 'edit' not in _pipelines:
+        from diffusers import AutoPipelineForImage2Image
+
+        _pipelines['edit'] = AutoPipelineForImage2Image.from_pipe(_pipelines['text'])
+    return _pipelines['edit' if edit else 'text']
+
+
+@pxt.udf
+def local_image(prompt: str, aspect_ratio: str, start: pxt.Image | None = None, strength: float = 0.6, seed: int = 7) -> pxt.Image:
+    """A local image: from the prompt alone, or, given `start`, an edit of that image."""
+    import torch
+
+    width, height = _LOCAL_SIZES.get(aspect_ratio, (640, 640))
+    pipe = _local_pipeline(edit=start is not None)
+    generator = torch.Generator(pipe.device).manual_seed(seed)
+    if start is None:
+        return pipe(prompt, width=width, height=height, num_inference_steps=20, generator=generator).images[0]
+    image = start.convert('RGB').resize((width, height), Image.LANCZOS)
+    return pipe(prompt, image=image, strength=strength, num_inference_steps=25, generator=generator).images[0]
+
+
+def _conform(obj, schema: dict):
+    """Fill in any field a small local model left out, so the next column still finds it."""
+    obj = obj if isinstance(obj, dict) else {}
+    for key, spec in schema.get('properties', {}).items():
+        if key not in obj:
+            kind = spec.get('type')
+            obj[key] = [] if kind == 'array' else False if kind == 'boolean' else {} if kind == 'object' else ''
+    if 'blocking' in obj and 'approved' in obj:
+        obj['approved'] = bool(obj['approved']) and not obj['blocking']  # a review with blocking problems never passes
+    return obj
+
+
+@pxt.udf
+def local_json(prompt: str, schema: pxt.Json, model: str) -> pxt.Json:
+    """A JSON answer from a local Ollama model, held to the schema."""
+    import ollama
+
+    response = ollama.chat(model=model, messages=[{'role': 'user', 'content': prompt}], format=schema, options={'temperature': 0.4})
+    return _conform(_loads(response['message']['content']), schema)
+
+
+@pxt.udf
+def local_review(image: pxt.Image | None, prompt: str, schema: pxt.Json, model: str) -> pxt.Json | None:
+    """A local vision model's review of an image, as JSON. Empty when there is no image to review."""
+    import ollama
+
+    if image is None:
+        return None
+    buf = io.BytesIO()
+    image.convert('RGB').save(buf, format='JPEG', quality=90)
+    response = ollama.chat(
+        model=model, messages=[{'role': 'user', 'content': prompt, 'images': [buf.getvalue()]}], format=schema, options={'temperature': 0}
+    )
+    return _conform(_loads(response['message']['content']), schema)
+
+
+@pxt.udf
+def no_review(clip: pxt.Video | None) -> pxt.Json | None:
+    """Local runs make no clips, so there is nothing to review."""
+    return None
+
+
+def _world_lines(context: dict) -> tuple[str, str]:
+    lines = context.get('world', '').split('\n')
+    room = lines[0].removeprefix('The set: ') if lines else ''
+    light = next((l.removeprefix('Light: ') for l in lines if l.startswith('Light: ')), 'soft natural window light')
+    return room, light
+
+
+@pxt.udf
+def short_prompt(kind: str, context: pxt.Json) -> str:
+    """A short prompt for a local image model. Stable Diffusion reads only about 75 words, so what matters comes first."""
+    room, light = _world_lines(context)
+    style = f'Editorial photograph, {light}.'
+    if kind == 'plate':
+        return f'{room} A wide view of the empty room, no people. {style}'
+    if kind == 'base':
+        return f"{context['subject']} {context['blank']} {room} No people, no text. {style}"
+    return f"{context['treatment']} {context['subject']} {style}"
+
+
+@pxt.udf
+def short_packshot(packaging: str, style: pxt.Json) -> str:
+    background = next(s for s in style['palette'] if s['role'] == 'background')
+    return f"Product packshot: {packaging} Alone on a seamless {background['name']} backdrop, soft studio light, photoreal."
 
 
 # ---------------------------------------------------------------------------

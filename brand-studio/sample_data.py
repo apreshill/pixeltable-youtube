@@ -282,7 +282,7 @@ Never allowed: {never}.
 
 Sort every problem you find into one of two lists.
 Look at the room as a luxury brand's creative director would. Vintage or modern, it must look spotless, cared for, and beautifully styled.
-Blocking, the shot cannot ship: a brand name misspelled or in the wrong typeface, a person or part of one, words that are not brand names or product labels, brand names that are not made from the material as described, objects pasted in like cutouts, anything that looks dirty, worn, or neglected (grime, stains, water marks, rust, mold, chipped or cracked tiles, dark or dirty grout, peeling paint, dust, clutter), or the brand's never list broken in a way a viewer would notice.
+Blocking, the shot cannot ship: a brand name misspelled or in the wrong typeface (letters built from tiles or other pieces only need to follow the logo's shapes as closely as the pieces allow), a person or part of one, words that are not brand names or product labels, brand names that are not made from the material as described, objects pasted in like cutouts, anything that looks dirty, worn, or neglected (grime, stains, water marks, rust, mold, chipped or cracked tiles, dark or dirty grout, peeling paint, dust, clutter), or the brand's never list broken in a way a viewer would notice.
 Minor, note it but do not block: small artifacts in background objects, slightly soft small print, light that is a little off.
 Approve if and only if the blocking list is empty."""
 
@@ -447,25 +447,59 @@ MOMENTS = [
         },
     },
     {
-        'moment': 'tile_floor',
-        # Inlay cuts any letter shape, but the fit guard keeps the tile moment to grid-friendly wordmarks.
+        'moment': 'hex_floor',
+        # Mosaic letters are built from tiles: geometric caps and monospace read well. A script does not.
         'fits': ['geometric caps', 'monospace'],
         'physics': (
-            'The letters are inlaid. Each one was cut from matte tile in its ink color with a waterjet, to the exact logo shape, and set into the floor. The small floor tiles around it were cut to fit, leaving a fine joint around every letter. Inside a letter there is no grid. Nothing is painted, printed, or laid on top.'
+            'Classic mosaic lettering: the letters are spelled out in the same small hexagon tiles as the floor, in the '
+            'ink color, set into the floor in place of the pale tiles, like the mosaic name in the entrance floor of a '
+            'historic hotel. Every letter is made of whole tiles. Nothing is painted, printed, or laid on top.'
         ),
         'subject': (
-            'The bathroom floor just inside the door, laid in small, pale, matte square mosaic tiles, '
-            'with grout the same pale color as the tiles, so the grid is quiet.'
+            'The bathroom floor just inside the door: a classic mosaic floor of small, pale, matte hexagon tiles '
+            'with matching grout.'
         ),
-        'blank': 'The floor is plain: every tile is the same pale color, with no letters, inlay, border, or pattern.',
-        'composite': 'inlay',
+        'blank': 'The floor is plain: every hexagon tile is the same pale color, with no lettering, border, or pattern.',
+        'composite': 'mosaic',
         'treatment': (
-            'Inlaid into the pale floor: {wordmarks}. The letters are matte tile in {letter_colors}, large, '
-            'like the name set into the entrance floor of a grand hotel.'
+            'Mosaic lettering in the middle of the floor: {wordmarks}, spelled out in small hexagon tiles in {letter_colors}, '
+            'large, centered, and easy to read.'
         ),
         'framing': (
-            'Vertical, looking straight down from standing height, so the tile grid runs square to the frame. '
-            'The floor fills the frame, with the threshold and the bottom of the door along the top edge.'
+            'Vertical, looking straight down from standing height. The floor fills the frame, '
+            'with the threshold and the bottom of the door along the top edge.'
+        ),
+        'aspect_ratio': '9:16',
+        'show_products': False,
+        'motion': {
+            'prompt': 'The camera slowly rises straight up, still looking down at the floor lettering. Nothing else moves.',
+            'shows': 'The camera rises slowly over the floor lettering. The letters stay sharp and unchanged.',
+            'seconds': 4,
+            'reverse': False,
+        },
+    },
+    {
+        'moment': 'penny_floor',
+        # Mosaic letters are built from tiles: geometric caps and monospace read well. A script does not.
+        'fits': ['geometric caps', 'monospace'],
+        'physics': (
+            'Classic mosaic lettering: the letters are spelled out in the same small penny round tiles as the floor, in the '
+            'ink color, set into the floor in place of the pale tiles, like the mosaic name in the entrance floor of a '
+            'historic hotel. Every letter is made of whole tiles. Nothing is painted, printed, or laid on top.'
+        ),
+        'subject': (
+            'The bathroom floor just inside the door: a classic mosaic floor of small, pale, matte penny round tiles '
+            'with matching grout.'
+        ),
+        'blank': 'The floor is plain: every penny round tile is the same pale color, with no lettering, border, or pattern.',
+        'composite': 'mosaic',
+        'treatment': (
+            'Mosaic lettering in the middle of the floor: {wordmarks}, spelled out in small penny rounds in {letter_colors}, '
+            'large, centered, and easy to read.'
+        ),
+        'framing': (
+            'Vertical, looking straight down from standing height. The floor fills the frame, '
+            'with the threshold and the bottom of the door along the top edge.'
         ),
         'aspect_ratio': '9:16',
         'show_products': False,
@@ -522,7 +556,7 @@ CAMPAIGNS = [
             'ORIEL × brume: The Morning Edit, a limited collection for the first hour of the day. '
             'One shared bathroom at 7am, where skin care and hair care live side by side. It arrives Tuesday.'
         ),
-        'moments': ['doormat', 'towel_label', 'steam_mirror', 'tile_floor'],
+        'moments': ['doormat', 'towel_label', 'steam_mirror', 'hex_floor'],
         'clips': True,
     },
     {
@@ -532,7 +566,7 @@ CAMPAIGNS = [
         'direction': 'monochrome-set',
         'skus': ORIEL_SKUS,
         'brief': 'ORIEL Daylight: the new skin tint and sun balm, for skin that looks like skin in morning light.',
-        'moments': ['steam_mirror', 'tile_floor'],
+        'moments': ['steam_mirror', 'penny_floor'],
         'clips': False,
     },
     {
@@ -542,7 +576,7 @@ CAMPAIGNS = [
         'direction': 'monochrome-set',
         'skus': BRUME_SKUS,
         'brief': 'brume Slow Hair: a five-minute scalp oil ritual before the shower, and a mist for after.',
-        'moments': ['steam_mirror', 'tile_floor'],
+        'moments': ['steam_mirror', 'hex_floor'],
         'clips': False,
     },
     {
@@ -552,7 +586,7 @@ CAMPAIGNS = [
         'direction': 'macro-detail',
         'skus': ORIEL_SKUS + BRUME_SKUS,
         'brief': 'brume × ORIEL: The Morning Edit, up close. The same bathroom, in details.',
-        'moments': ['steam_mirror', 'soap_bar', 'tile_floor'],
+        'moments': ['steam_mirror', 'soap_bar', 'penny_floor'],
         'clips': False,
     },
 ]
