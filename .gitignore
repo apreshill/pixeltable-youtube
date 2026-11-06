@@ -29,3 +29,6 @@ venv/
 .ruff_cache/
 .mypy_cache/
 .pytest_cache/
+
+# brand-studio run outputs
+brand-studio/out/

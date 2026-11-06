@@ -158,12 +158,6 @@ def brand_board(
 # Art direction: Gemini reads each brand's style guide once.
 # ---------------------------------------------------------------------------
 
-ART_DIRECTION_PROMPT = (
-    'You are the brand studio lead. Read these brand guidelines and return the art direction '
-    'that an image model needs, as JSON. Keep each field short and concrete. '
-    'Copy hex codes exactly as written.\n\n'
-)
-
 ART_DIRECTION_SCHEMA = {
     'type': 'object',
     'properties': {
@@ -180,8 +174,9 @@ ART_DIRECTION_SCHEMA = {
 
 
 @pxt.udf
-def art_direction_prompt(style_guide: str) -> str:
-    return ART_DIRECTION_PROMPT + style_guide
+def art_direction_prompt(style_guide: str, wording: pxt.Json) -> str:
+    """The art direction prompt: the `art_direction` row, with the style guide filled in."""
+    return _words(wording)['art_direction'].format(style_guide=style_guide)
 
 
 # ---------------------------------------------------------------------------
@@ -197,46 +192,65 @@ def fill(template: pxt.Json, context: pxt.Json) -> str:
     return template.format_map(context)
 
 
+def _words(wording) -> dict:
+    """The `prompts` table as {name: template}."""
+    return {r['name']: r['template'] for r in wording}
+
+
 def _bullets(items) -> str:
     return '\n'.join(f'- {item}' for item in items)
 
 
 @pxt.udf
 def campaign_context(
-    playbook: pxt.Json, style: pxt.Json, partner: pxt.Json | None, brief: str, moments: pxt.Json
+    playbook: pxt.Json,
+    style: pxt.Json,
+    partner: pxt.Json | None,
+    brief: str,
+    moments: pxt.Json,
+    wordmark_looks: pxt.Json,
+    wording: pxt.Json,
 ) -> pxt.Json:
-    """The slots every template in a campaign can use."""
+    """The slots every template in a campaign can use, worded by the `prompts` rows."""
+    words = _words(wording)
     kits = [style] + ([partner] if partner else [])
     names = [k['name'] for k in kits]
+    looks = list(wordmark_looks.values())
+    inks = [_ink(k['palette']) for k in kits]
+    pair = {'name': names[0], 'look': looks[0], 'ink': inks[0], 'lockup': playbook['lockup']}
     if partner:
-        wordmarks = f'the {names[0]} and {names[1]} wordmarks, exactly as attached, {playbook["lockup"]}'
-    else:
-        wordmarks = f'the {names[0]} wordmark, exactly as attached'
-    brands = []
-    for k in kits:
-        ad = k['art_direction']
-        brands.append(
-            f"{k['name']} ({k['category']}). Palette: {_palette_line(k['palette'])}. Light: {ad['light']} "
-            f"Surfaces: {', '.join(ad['surfaces'])}. Props: {', '.join(ad['props'])}. Story: {ad['story']}"
+        pair |= {'partner_name': names[1], 'partner_look': looks[1], 'partner_ink': inks[1]}
+    count = 'two' if partner else 'one'
+    brands = [
+        words['brand_line'].format(
+            name=k['name'],
+            category=k['category'],
+            palette=_palette_line(k['palette']),
+            light=k['art_direction']['light'],
+            surfaces=', '.join(k['art_direction']['surfaces']),
+            props=', '.join(k['art_direction']['props']),
+            story=k['art_direction']['story'],
         )
-    # In a collaboration the first brand owns the room, so its rules are {never}.
+        for k in kits
+    ]
+    # In a collaboration the first brand owns the set, so its rules are {never}.
     # {never_all} adds the partner's, for templates that want both.
-    inks = [f"{k['name']} in {_ink(k['palette'])}" for k in kits]
     never = list(style['art_direction']['never'])
     never_all = [n for k in kits for n in k['art_direction']['never']]
     return {
+        'words': words,
+        'pair': pair,
         'brief': brief,
         'lockup': ' × '.join(names),
         'names': ' and '.join(f'"{n}"' for n in names),
-        'wordmarks': wordmarks,
-        # Each wordmark in its own brand's ink color, for moments that color the letters.
-        'letter_colors': inks[0].split(' in ', 1)[1] if not partner else ' and '.join(inks),
+        'wordmarks': words[f'wordmark_{count}'].format(**pair),
+        'letter_colors': words[f'letter_colors_{count}'].format(**pair),
         'brands': '\n'.join(brands),
         'pairing': playbook['pairing'] if partner else playbook['solo'],
         'house_rules': _bullets(playbook['house_rules']),
         'never': '; '.join(never),
         'never_all': '; '.join(never_all),
-        # The room must have every moment's subject. Lettering comes later, shot by shot.
+        # The set must have every moment's subject. Lettering comes later, shot by shot.
         'needs': _bullets(m['subject'] for m in moments),
     }
 
@@ -268,14 +282,15 @@ WORLD_SCHEMA = {
 
 @pxt.udf
 def with_world(context: pxt.Json, world: pxt.Json) -> pxt.Json:
-    """The campaign slots plus {world}: the set the designer returned, as prompt lines."""
-    lines = [
-        f"The set: {world['set']}",
-        'Colors: ' + '; '.join(f"{c.get('name', '')} {c.get('hex', '')} on {c.get('where', '')}" for c in world['palette']) + '.',
-        f"Materials: {', '.join(map(str, world['materials']))}. Hardware: {world['hardware']}.",
-        f"Light: {world['light']}",
-    ]
-    return {**context, 'world': '\n'.join(lines), 'styling': world['styling']}
+    """The campaign slots plus {world}: the set the designer returned, worded by the `world` row."""
+    words = context['words']
+    colors = '; '.join(
+        words['world_color'].format(name=c.get('name', ''), hex=c.get('hex', ''), where=c.get('where', '')) for c in world['palette']
+    )
+    text = words['world'].format(
+        set=world['set'], colors=colors, materials=', '.join(map(str, world['materials'])), hardware=world['hardware'], light=world['light']
+    )
+    return {**context, 'world': text, 'styling': world['styling']}
 
 
 @pxt.udf
@@ -288,24 +303,26 @@ def styles(brand: str, style: str, partner: str | None, partner_style: str | Non
 
 
 @pxt.udf
-def shot_context(context: pxt.Json, products: pxt.Json, spec: pxt.Json, wordmark_styles: pxt.Json) -> pxt.Json:
-    """The campaign and set slots plus the moment's own: {subject}, {treatment}, {framing}, {products}."""
-    misfits = [f'{b} ({s})' for b, s in wordmark_styles.items() if s not in spec['fits']]
-    if misfits:
-        raise ValueError(
-            f"{spec['moment']} cannot carry the wordmark of {', '.join(misfits)}: "
-            f"its material can only make {', '.join(spec['fits'])}"
-        )
-    shown = products if spec['show_products'] else []
+def shot_context(context: pxt.Json, products: pxt.Json, spec: pxt.Json) -> pxt.Json:
+    """The campaign and set slots plus the moment's own, worded by the `prompts` rows.
+
+    The code only counts the attached images, so each label names the right one.
+    """
+    words, pair = context['words'], context['pair']
     # Products are shown, not named: a named product tempts the image model to invent label text.
-    product_line = (
-        f"{context['styling']} The products are the {len(shown)} in the attached packshots, exactly as they look, "
-        'with labels that show only what the packshots show.'
-        if shown
-        else 'No products in this shot.'
-    )
+    shown = products if spec['show_products'] else []
+    if shown:
+        packshots = 'Image 2' if len(shown) == 1 else f'Images 2 to {1 + len(shown)}'
+        base_images = words['base_images_products'].format(packshots=packshots)
+        product_line = words['products_shown'].format(styling=context['styling'], count=len(shown))
+    else:
+        base_images = words['base_images']
+        product_line = words['products_none']
+    letter_images = words['letter_images_two' if 'partner_name' in pair else 'letter_images_one'].format(**pair)
     return {
         **context,
+        'base_images': base_images,
+        'letter_images': letter_images,
         'subject': spec['subject'],
         'blank': spec['blank'],
         'treatment': spec['treatment'].format_map(context),
@@ -320,10 +337,7 @@ def shot_context(context: pxt.Json, products: pxt.Json, spec: pxt.Json, wordmark
 @pxt.udf
 def plate_input(prompt: str, references: pxt.Json) -> pxt.Json:
     """The establishing shot's input: library photos for mood, then the prompt."""
-    parts: list = []
-    for r in references:
-        parts += ['Brand photography. Match its light and mood, not its content.', r['image']]
-    return parts + [prompt]
+    return [r['image'] for r in references] + [prompt]
 
 
 @pxt.udf
@@ -333,30 +347,16 @@ def image_config(aspect_ratio: str) -> pxt.Json:
 
 @pxt.udf
 def shot_input(prompt: str, plate: pxt.Image, products: pxt.Json, spec: pxt.Json) -> pxt.Json:
-    """The base shot's input: the set, the packshots, then the prompt. No logos: the surface stays blank."""
-    # Every reference is labeled as a reference, so the model photographs the scene fresh instead of pasting them in.
-    parts: list = [
-        'Reference for the room only: its colors, materials, and hardware. Do not paste, frame, or reuse this '
-        'picture. Photograph the room fresh from the camera position described below.',
-        plate,
-    ]
-    if spec['show_products']:
-        for p in products:
-            parts += [
-                'Reference for one of the products. Place the real product in the scene, standing on a surface and lit '
-                'by the room, with its label exactly as shown. Never paste this picture or its background.',
-                p['packshot'],
-            ]
-    return parts + [prompt]
+    """The base shot's input: Image 1 the room, then the packshots, then the prompt that names them."""
+    packshots = [p['packshot'] for p in products] if spec['show_products'] else []
+    return [plate, *packshots, prompt]
 
 
 @pxt.udf
 def letter_input(prompt: str, base: pxt.Image, visuals: pxt.Json, partner_visuals: pxt.Json | None) -> pxt.Json:
-    """The image model's edit: the base photo, the wordmarks, then the prompt."""
-    parts: list = ['The photograph to edit.', base]
-    for v in [visuals] + ([partner_visuals] if partner_visuals else []):
-        parts += [f"Reference for the {v['name']} wordmark: copy these letterforms exactly, in this typeface and case.", v['logo']]
-    return parts + [prompt]
+    """The edit's input: Image 1 the base photo, then each logo, then the prompt that names them."""
+    logos = [visuals['logo']] + ([partner_visuals['logo']] if partner_visuals else [])
+    return [base, *logos, prompt]
 
 
 REVIEW_SCHEMA = {
@@ -430,24 +430,21 @@ def clip_review_input(clip: pxt.Video, prompt: str) -> pxt.Json:
 # Products: one studio packshot per SKU, so every shot shows the same product.
 # ---------------------------------------------------------------------------
 
-PACKSHOT_TEMPLATE = (
-    'A product packshot of {name} by {brand}. {packaging} '
-    'The product stands alone, centered, on a seamless backdrop in {background}, with a soft, natural shadow. '
-    'Soft, even studio daylight. Photoreal, sharp, high end beauty catalog. '
-    'The label shows the attached wordmark exactly, letter for letter, and no other words.'
-)
+@pxt.udf
+def packshot_prompt(name: str, packaging: str, style: pxt.Json, photo: pxt.Image | None, wording: pxt.Json) -> str:
+    """The packshot prompt: the `packshot` row, with the product and each attached image filled in."""
+    words = _words(wording)
+    background = next(s for s in style['palette'] if s['role'] == 'background')
+    images = words['packshot_images_photo' if photo is not None else 'packshot_images'].format(brand=style['name'])
+    return words['packshot'].format(
+        images=images, name=name, brand=style['name'], packaging=packaging, background=f"{background['name']} {background['hex']}"
+    )
 
 
 @pxt.udf
-def packshot_input(name: str, packaging: str, visuals: pxt.Json, style: pxt.Json, photo: pxt.Image | None) -> pxt.Json:
-    background = next(s for s in style['palette'] if s['role'] == 'background')
-    prompt = PACKSHOT_TEMPLATE.format(
-        name=name, brand=style['name'], packaging=packaging, background=f"{background['name']} {background['hex']}"
-    )
-    parts = [f"The {style['name']} wordmark:", visuals['logo']]
-    if photo is not None:
-        parts += ['A phone photo of the real product. Keep its exact shape and materials.', photo]
-    return parts + [prompt]
+def packshot_input(prompt: str, visuals: pxt.Json, photo: pxt.Image | None) -> pxt.Json:
+    """Image 1 the logo, Image 2 the phone photo if there is one, then the prompt."""
+    return [visuals['logo']] + ([photo] if photo is not None else []) + [prompt]
 
 
 @pxt.udf
@@ -602,116 +599,6 @@ def lay_letters(
     kits = [(visuals, style)] + ([(partner_visuals, partner)] if partner_visuals else [])
     lockup = _lockup([v['logo'] for v, _ in kits], [_color(s['palette'], 'ink') for _, s in kits])
     return COMPOSITORS[method](base, lockup)
-
-
-# ---------------------------------------------------------------------------
-# Local models, for iterating for free. Stable Diffusion runs on the Mac's GPU, and
-# Ollama runs a small text model and a small vision model. They are far weaker than
-# Gemini; they exercise the whole system, not the final look.
-# ---------------------------------------------------------------------------
-
-LOCAL_IMAGE_MODEL = 'stabilityai/stable-diffusion-2-1'
-_LOCAL_SIZES = {'9:16': (432, 768), '1:1': (640, 640), '4:5': (576, 720), '16:9': (768, 432)}
-_pipelines: dict = {}
-
-
-def _local_pipeline(edit: bool):
-    """Load Stable Diffusion once per process. The edit pipeline shares the same weights."""
-    if 'text' not in _pipelines:
-        import torch
-        from diffusers import AutoPipelineForText2Image
-
-        device = 'mps' if torch.backends.mps.is_available() else 'cpu'
-        dtype = torch.float16 if device == 'mps' else torch.float32
-        pipe = AutoPipelineForText2Image.from_pretrained(LOCAL_IMAGE_MODEL, torch_dtype=dtype).to(device)
-        pipe.set_progress_bar_config(disable=True)
-        _pipelines['text'] = pipe
-    if edit and 'edit' not in _pipelines:
-        from diffusers import AutoPipelineForImage2Image
-
-        _pipelines['edit'] = AutoPipelineForImage2Image.from_pipe(_pipelines['text'])
-    return _pipelines['edit' if edit else 'text']
-
-
-@pxt.udf
-def local_image(prompt: str, aspect_ratio: str, start: pxt.Image | None = None, strength: float = 0.6, seed: int = 7) -> pxt.Image:
-    """A local image: from the prompt alone, or, given `start`, an edit of that image."""
-    import torch
-
-    width, height = _LOCAL_SIZES.get(aspect_ratio, (640, 640))
-    pipe = _local_pipeline(edit=start is not None)
-    generator = torch.Generator(pipe.device).manual_seed(seed)
-    if start is None:
-        return pipe(prompt, width=width, height=height, num_inference_steps=20, generator=generator).images[0]
-    image = start.convert('RGB').resize((width, height), Image.LANCZOS)
-    return pipe(prompt, image=image, strength=strength, num_inference_steps=25, generator=generator).images[0]
-
-
-def _conform(obj, schema: dict):
-    """Fill in any field a small local model left out, so the next column still finds it."""
-    obj = obj if isinstance(obj, dict) else {}
-    for key, spec in schema.get('properties', {}).items():
-        if key not in obj:
-            kind = spec.get('type')
-            obj[key] = [] if kind == 'array' else False if kind == 'boolean' else {} if kind == 'object' else ''
-    if 'blocking' in obj and 'approved' in obj:
-        obj['approved'] = bool(obj['approved']) and not obj['blocking']  # a review with blocking problems never passes
-    return obj
-
-
-@pxt.udf
-def local_json(prompt: str, schema: pxt.Json, model: str) -> pxt.Json:
-    """A JSON answer from a local Ollama model, held to the schema."""
-    import ollama
-
-    response = ollama.chat(model=model, messages=[{'role': 'user', 'content': prompt}], format=schema, options={'temperature': 0.4})
-    return _conform(_loads(response['message']['content']), schema)
-
-
-@pxt.udf
-def local_review(image: pxt.Image | None, prompt: str, schema: pxt.Json, model: str) -> pxt.Json | None:
-    """A local vision model's review of an image, as JSON. Empty when there is no image to review."""
-    import ollama
-
-    if image is None:
-        return None
-    buf = io.BytesIO()
-    image.convert('RGB').save(buf, format='JPEG', quality=90)
-    response = ollama.chat(
-        model=model, messages=[{'role': 'user', 'content': prompt, 'images': [buf.getvalue()]}], format=schema, options={'temperature': 0}
-    )
-    return _conform(_loads(response['message']['content']), schema)
-
-
-@pxt.udf
-def no_review(clip: pxt.Video | None) -> pxt.Json | None:
-    """Local runs make no clips, so there is nothing to review."""
-    return None
-
-
-def _world_lines(context: dict) -> tuple[str, str]:
-    lines = context.get('world', '').split('\n')
-    room = lines[0].removeprefix('The set: ') if lines else ''
-    light = next((l.removeprefix('Light: ') for l in lines if l.startswith('Light: ')), 'soft natural window light')
-    return room, light
-
-
-@pxt.udf
-def short_prompt(kind: str, context: pxt.Json) -> str:
-    """A short prompt for a local image model. Stable Diffusion reads only about 75 words, so what matters comes first."""
-    room, light = _world_lines(context)
-    style = f'Editorial photograph, {light}.'
-    if kind == 'plate':
-        return f'{room} A wide view of the empty room, no people. {style}'
-    if kind == 'base':
-        return f"{context['subject']} {context['blank']} {room} No people, no text. {style}"
-    return f"{context['treatment']} {context['subject']} {style}"
-
-
-@pxt.udf
-def short_packshot(packaging: str, style: pxt.Json) -> str:
-    background = next(s for s in style['palette'] if s['role'] == 'background')
-    return f"Product packshot: {packaging} Alone on a seamless {background['name']} backdrop, soft studio light, photoreal."
 
 
 # ---------------------------------------------------------------------------

@@ -84,6 +84,7 @@ Each video has its own README with recipes, expected output, and troubleshooting
 - [`branded-newsletter-visuals`](branded-newsletter-visuals/README.md)
 - [`nemotron-transcribe`](nemotron-transcribe/README.md)
 - [`rerun-failures`](rerun-failures/README.md)
+- [`brand-studio`](brand-studio/README.md)
 
 ## Expected Output
 
@@ -160,6 +161,14 @@ pixeltable-youtube/
     schema_rgb.py
     udfs.py
     photo_names.txt
+  brand-studio/
+    README.md
+    brand-studio.ipynb
+    schema.py
+    udfs.py
+    sample_data.py
+    brand_kits/
+    scripts/
 ```
 
 The local Pixeltable catalog is under `~/.pixeltable`. It is not stored in this repo.
