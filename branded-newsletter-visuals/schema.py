@@ -2,7 +2,7 @@
 
 You insert an issue number, a short scene, and, if you like, an inspiration
 picture. The columns below fill in on that insert: the two prompts, the
-picture, the brand plate, the cover, and the video. The cover is the first frame of the video.
+picture, the brand plate, the cover, and a video made from the cover.
 
 Apply with:
 
@@ -29,10 +29,10 @@ ART_TEMPLATE = (
     'or empty bands. No text, no letters, no numbers, no watermark.'
 )
 MOTION_TEMPLATE = (
-    'Animate this picture as one 5-second shot. The picture shows: {scene} '
+    '<FIRST_FRAME> Animate this picture as one 5-second shot, starting on this exact picture. The picture shows: {scene} '
     'The camera pushes in slowly for the whole shot, with no panning. '
     'What is already in the picture comes alive and keeps moving clearly the whole time, in whatever ways fit it: '
-    'grass and leaves sway in a breeze, shadows of clouds already in the sky drift across the ground, '
+    'grass and leaves sway in a breeze, light and shadows shift slowly, '
     'water flows, stars and moons pulse brighter and dimmer. '
     'Every moving element is subtle and realistic but still noticeable, '
     'and each one moves at its own random pace and timing, never in step with the others. '
@@ -64,4 +64,9 @@ class Issues(TableModel, name='issues'):
     plate = udfs.make_plate(art, issue_label)
     cover = udfs.composite_cover(art, plate)
 
-    video = udfs.animate_cover(motion_prompt, cover, model=VIDEO_MODEL, duration_seconds=VIDEO_SECONDS)
+    video = pxtf.gemini.generate_video(
+        motion_prompt,
+        images=[cover],
+        model=VIDEO_MODEL,
+        config={'aspect_ratio': '16:9', 'duration': f'{VIDEO_SECONDS}s'},
+    )

@@ -1,24 +1,15 @@
-"""The brand plate and the video call for the Issues table.
+"""The brand plate for the Issues table.
 
 The prompts live in schema.py. This file holds the optional inspiration image
-for the picture prompt, the Pillow drawing, and the video call. The
-plate draws the issue label the schema already formatted, so the words on the
+for the picture prompt and the Pillow drawing. The video comes from Pixeltable's
+built-in Gemini function, called in schema.py. The plate draws the issue label the schema already formatted, so the words on the
 cover and the words in the video prompt are the same column.
-
-Gemini Omni Flash makes the video through the Interactions API. The cover
-image is the first frame.
 """
 
-import base64
-import io
 from pathlib import Path
 
 import pixeltable as pxt
-from pixeltable.utils.local_store import TempStore
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
-
-# Omni usually answers in under a minute. A stalled call becomes an error on that row after this many seconds.
-VIDEO_TIMEOUT_SECONDS = 180
 
 NEWSLETTER_NAME = "RAMI'S DATA NEWSLETTER"
 _FONTS = Path(__file__).parent / 'fonts'
@@ -113,46 +104,3 @@ def composite_cover(art: pxt.Image, plate: pxt.Image) -> pxt.Image:
     """Lay the brand plate on the generated art."""
     merged = Image.alpha_composite(art.convert('RGBA'), plate.convert('RGBA'))
     return merged.convert('RGB')
-
-
-@pxt.udf
-def animate_cover(prompt: pxt.String, cover: pxt.Image, model: pxt.String, duration_seconds: pxt.Int) -> pxt.Video:
-    """Animate the branded cover. The cover is the first frame of the video."""
-    from pixeltable.runtime import get_runtime
-
-    buf = io.BytesIO()
-    cover.convert('RGB').save(buf, format='JPEG', quality=90)
-    image_b64 = base64.b64encode(buf.getvalue()).decode('ascii')
-    client = get_runtime().get_client('gemini')
-    interaction = client.interactions.create(
-        model=model,
-        input=[
-            {'type': 'image', 'data': image_b64, 'mime_type': 'image/jpeg'},
-            {'type': 'text', 'text': f'<FIRST_FRAME> {prompt}'},
-        ],
-        # The Interactions API takes the length as a string such as '5s'.
-        response_format={
-            'type': 'video',
-            'aspect_ratio': '16:9',
-            'duration': f'{duration_seconds}s',
-        },
-        timeout=VIDEO_TIMEOUT_SECONDS,
-    )
-    video = interaction.output_video
-    raw = _video_bytes(client, video)
-    # A file in Pixeltable's TempStore moves into the media store with the row.
-    path = TempStore.create_path(extension='.mp4')
-    path.write_bytes(raw)
-    return str(path)
-
-
-def _video_bytes(client: object, video: object) -> bytes:
-    if video is None:
-        raise RuntimeError('The video model returned no video.')
-    data = getattr(video, 'data', None)
-    if data:
-        return base64.b64decode(data)
-    uri = getattr(video, 'uri', None)
-    if uri:
-        return client.files.download(file=uri)
-    raise RuntimeError('The video model returned no video.')
