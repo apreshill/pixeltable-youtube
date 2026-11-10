@@ -1,6 +1,6 @@
 # Rerun only the failures
 
-This notebook runs 1,673 photos through one Pixeltable table. 59 photos fail, for three different reasons. The run keeps going past every failure, saves each error on its row, and then reruns only the photos that failed.
+This notebook runs 1,673 photos through one Pixeltable table. 59 photos fail to get a color, for three different reasons, and 32 more fail to get an embedding. The run keeps going past every failure, saves each error on its row, and then reruns only the photos that failed.
 
 It answers two questions from people running big image jobs. If a run stops partway, is the whole batch lost? And can you rerun only the cells that failed?
 
@@ -10,27 +10,29 @@ It answers two questions from people running big image jobs. If a run stops part
 2. `on_error='ignore'`, with photos inserted 200 at a time, keeps going past failures. If the run stops, the chunks that finished stay saved.
 3. `avg_color.errortype` and `avg_color.errormsg` show which photos failed and why. `pxt errors` lists the same failures from the command line.
 4. `recompute_columns('avg_color', errors_only=True)` reruns only the failed rows, along with the columns built on them.
+5. `embedding(idx='photo_embedding') == None` finds the photos the embedding index failed on, and `update({'image': photos.image}, where=missing, cascade=False)` embeds only those photos again. `recompute_columns` works on columns, not indexes, and `pxt errors` doesn't list embedding failures.
 
 | Failure | Photos | Fix |
 |---|---|---|
 | Timeout, from the stand-in | 30 (about 1 in 50) | retry with `errors_only=True` |
 | Grayscale photo | 28 | change the column in `schema_rgb.py`, then retry with `errors_only=True` |
 | Not an image | 1 | delete the row |
+| Embedding timeout, from the stand-in | 32 (about 1 in 50) | `update` the column to its own value where the embedding is missing |
 
 ## Technical Architecture
 
 1. **Pixeltable database (`rerun_demo`)**
-   - `photos`: one row per photo. You insert `name` and `image`. Pixeltable computes `avg_color` and `color`.
+   - `photos`: one row per photo. You insert `name` and `image`. Pixeltable computes `avg_color` and `color`, and embeds each photo into the `photo_embedding` index.
 
 2. **Schema files**
    - `schema.py` declares `photos`.
    - `schema_rgb.py` is the same table with one change: each photo is converted to RGB before `average_color` runs.
-   - `udfs.py` holds `average_color` and `color_name`.
+   - `udfs.py` holds `average_color`, `color_name`, and `image_embedding`.
 
 3. **Notebook (`rerun-failures.ipynb`)**
    - Resets `rerun_demo`, applies `schema.py`, inserts the photos, and fixes each kind of failure.
 
-`average_color` stands in for a model call, so the notebook needs no API key. It is the one demo-only part: it raises `TimeoutError` the first time it sees about 1 photo in 50, the way a busy model API does. To use a real model, replace the body of `average_color`, and the rest of the notebook stays the same.
+`average_color` stands in for a model call, and `image_embedding` stands in for an embedding model, so the notebook needs no API key. They are the demo-only part: each raises `TimeoutError` the first time it sees about 1 photo in 50, on different photos, the way a busy model API does. To use real models, replace the body of `average_color`, and pass a real embedding (for example `clip`) to the index in both schema files. The rest of the notebook stays the same.
 
 The photos are 1,673 small ImageNet images (Imagenette, 160 pixels) from the Pixeltable repo. `photo_names.txt` lists their file names. The notebook reads them from:
 
@@ -107,6 +109,8 @@ After all 1,673 photos are in, the failures grouped by error type look like this
 
 The first `errors_only=True` retry reruns 59 rows, not 1,673. After it, the timeouts are gone and 1,644 photos have a color. After `schema_rgb.py` and the second retry, 1,672 do. Deleting `bad_image.JPEG` leaves 1,672 photos and 0 failures.
 
+After that, 32 photos have no embedding. The `update` re-embeds them, and the count of photos missing an embedding drops to 0.
+
 If you stop the chunked insert partway, the timeout count can come out a few lower. The stand-in remembers every photo it timed out, including photos in the chunk you stopped, and it times out each photo only once.
 
 ## File Layout
@@ -137,7 +141,7 @@ Run `uv sync` from this folder, register the kernel as above, then pick `rerun-f
 
 ### The timeouts fail again on retry
 
-The stand-in remembers which photos it timed out only while the notebook kernel is running. Run the retry from the notebook, in the same kernel as the insert. `pxt recompute ... --errors-only` runs in a new process, so each of those photos times out once more there.
+The stand-ins remember which photos they timed out only while the notebook kernel is running. Run the retry from the notebook, in the same kernel as the insert. `pxt recompute ... --errors-only` runs in a new process, so each of those photos times out once more there.
 
 ### Duplicate primary key on insert
 
