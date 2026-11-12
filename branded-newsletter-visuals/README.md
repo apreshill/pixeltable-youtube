@@ -2,7 +2,7 @@
 
 Insert one newsletter issue. You get a branded cover and a 5-second video.
 
-You type an issue number and a short scene, and you can add an inspiration picture for the image model to start from. The scene becomes the prompt for the picture and for the video, and the issue number becomes the words on the cover. On that insert, Pixeltable fills both prompts, generates the picture, prints the issue number and the newsletter name on it, and animates that cover. The cover is the first frame of the video.
+You type an issue number and a short scene, and you can add an inspiration picture for the image model to start from. The scene becomes the prompt for the picture and for the video, and the issue number becomes the words on the cover. On that insert, Pixeltable fills both prompts, generates the picture, prints the issue number and the newsletter name on it, and animates that cover.
 
 The sample scenes are four public issues of [Rami Krispin's newsletter](https://ramikrispin.substack.com/archive). The notebook inserts issues 111 and 109. Issues 106 and 93 are also in `sample_issues.py`.
 
@@ -13,7 +13,7 @@ The sample scenes are four public issues of [Rami Krispin's newsletter](https://
 1. `issue_label`, `art_prompt`, and `motion_prompt`, from the issue number and the scene
 2. `art_response` and `art`: a 16:9 still from Gemini's Nano Banana model (`gemini-3.1-flash-image-preview`), with no text in the picture
 3. `plate` and `cover`: `ISSUE N` in pink neon at the upper left, and `RAMI'S DATA NEWSLETTER` as white neon outline letters with a red glow along the bottom
-4. `video`, 5 seconds, 16:9, from Gemini Omni Flash, with the cover as the first frame
+4. `video`, 5 seconds, 16:9, from Gemini Omni Flash through Pixeltable's `gemini.generate_video`, from the cover
 
 A second insert computes only the new row.
 
@@ -53,7 +53,12 @@ Both the notebook and the `pxt` daemon call the Gemini API. The simplest way to 
 ```toml
 [gemini]
 api_key = '...'
+
+[gemini.rate_limits]
+gemini-omni-1.1-flash = 4
 ```
+
+The `rate_limits` line keeps Pixeltable to Omni's limit of 4 video requests a minute. Omni also allows only a small number of videos a day, so the notebook makes two: one per issue.
 
 Then restart the daemon once from `branded-newsletter-visuals/` with `uv run pxt daemon restart`.
 
@@ -77,7 +82,7 @@ cd branded-newsletter-visuals
 uv sync
 ```
 
-That creates `branded-newsletter-visuals/.venv` and installs Pixeltable 0.7.14 or newer, plus Pillow, the Gemini SDK, and Jupyter.
+That creates `branded-newsletter-visuals/.venv` and installs Pixeltable 0.7.24 or newer, plus Pillow, the Gemini SDK, and Jupyter.
 
 ### 3. Register the Kernel
 
@@ -105,7 +110,7 @@ Run the notebook from top to bottom.
 2. Create it with `pxt schema update schema.py visuals -f`
 3. Insert issue 111, then issue 109
 
-Each insert runs one image call and one video call, and takes about a minute. The second insert computes only issue 109. The last cell shows both covers and both videos.
+Each insert runs one image call and one video call, and takes about 40 seconds. The second insert computes only issue 109. The last cell shows both covers and both videos.
 
 ### 6. Start Over
 
@@ -113,7 +118,7 @@ The cell after `uv sync` drops the `visuals` directory, so running the notebook 
 
 ## Expected Output
 
-Issue 111's cover is a generated green valley with `ISSUE 111` in pink neon at the upper left and `RAMI'S DATA NEWSLETTER` in white neon outline letters with a red glow along the bottom. The still changes from run to run. The video is 5 seconds and 16:9, and the cover is its first frame.
+Issue 111's cover is a generated green valley with `ISSUE 111` in pink neon at the upper left and `RAMI'S DATA NEWSLETTER` in white neon outline letters with a red glow along the bottom. The still changes from run to run. The video is 5 seconds and 16:9, made from the cover.
 
 ## Troubleshooting
 
@@ -127,7 +132,7 @@ The notebook or the `pxt` daemon cannot find `GEMINI_API_KEY`. Put the key in `~
 
 ### A video cell holds an error
 
-Omni allows only a few requests a minute and a small number a day, so a video call can fail on a rate limit (429). Because the notebook inserts with `on_error='ignore'`, the row keeps its picture and cover with the error in `video`. Rerun only the failed videos:
+Omni allows only a few requests a minute and a small number a day, so a video call can fail on a rate limit (429), and a call that runs past five minutes fails with a timeout. Because the notebook inserts with `on_error='ignore'`, the row keeps its picture and cover with the error in `video`. Rerun only the failed videos:
 
 ```python
 issues.recompute_columns('video', errors_only=True)
@@ -201,7 +206,7 @@ Issues 106 and 93 are already in `sample_issues.py`. Insert one by changing `109
 
 ### Dependencies
 
-- Pixeltable 0.7.14 or newer: tables, computed columns, `pxt schema`
+- Pixeltable 0.7.24 or newer: tables, computed columns, `pxt schema`, and `gemini.generate_video` for Omni
 - google-genai: the still, through Nano Banana (`gemini-3.1-flash-image-preview`), and the video, through Gemini Omni Flash (`gemini-omni-1.1-flash`)
 - Pillow: the brand plate
 - JupyterLab and ipykernel: running the notebook
