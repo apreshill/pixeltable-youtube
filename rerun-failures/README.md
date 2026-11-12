@@ -8,14 +8,14 @@ It answers two questions from people running big image jobs. If a run stops part
 
 1. By default, an insert saves all of its rows or none, so one failed photo means none of the batch is saved.
 2. `on_error='ignore'`, with photos inserted 200 at a time, keeps going past failures. If the run stops, the chunks that finished stay saved.
-3. `avg_color.errortype` and `avg_color.errormsg` show which photos failed and why. `pxt errors` lists the same failures from the command line.
-4. `recompute_columns('avg_color', errors_only=True)` reruns only the failed rows, along with the columns built on them.
+3. `avg_color.errortype` and `avg_color.errormsg` show which photos failed and why. `pxt errors` lists the same failures from the command line, and its `next:` lines give the command that retries them.
+4. `recompute_columns('avg_color', errors_only=True)` in Python, or `pxt recompute rerun_demo/photos avg_color --errors-only -f` from the command line, reruns only the failed rows, along with the columns built on them. The notebook shows both.
 5. `embedding(idx='photo_embedding') == None` finds the photos the embedding index failed on, and `update({'image': photos.image}, where=missing, cascade=False)` embeds only those photos again. `recompute_columns` works on columns, not indexes, and `pxt errors` doesn't list embedding failures.
 
 | Failure | Photos | Fix |
 |---|---|---|
-| Timeout, from the stand-in | 30 (about 1 in 50) | retry with `errors_only=True` |
-| Grayscale photo | 28 | change the column in `schema_rgb.py`, then retry with `errors_only=True` |
+| Timeout, from the stand-in | 30 (about 1 in 50) | retry with `recompute_columns(..., errors_only=True)` |
+| Grayscale photo | 28 | change the column in `schema_rgb.py`, then retry with `pxt recompute ... --errors-only` |
 | Not an image | 1 | delete the row |
 | Embedding timeout, from the stand-in | 32 (about 1 in 50) | `update` the column to its own value where the embedding is missing |
 
@@ -107,9 +107,11 @@ After all 1,673 photos are in, the failures grouped by error type look like this
 3                 NaN    1614
 ```
 
-The first `errors_only=True` retry reruns 59 rows, not 1,673. After it, the timeouts are gone and 1,644 photos have a color. After `schema_rgb.py` and the second retry, 1,672 do. Deleting `bad_image.JPEG` leaves 1,672 photos and 0 failures.
+The first `errors_only=True` retry reruns 59 rows, not 1,673. After it, the timeouts are gone and 1,644 photos have a color. After `schema_rgb.py` and the second retry, from the command line, 1,672 do. That retry reruns 29 rows: the 28 grayscale photos and `bad_image.JPEG`, which fails again. Deleting `bad_image.JPEG` leaves 1,672 photos and 0 failures.
 
 After that, 32 photos have no embedding. The `update` re-embeds them, and the count of photos missing an embedding drops to 0.
+
+`pxt history rerun_demo/photos` ends the notebook with one version per change: one for each chunk of the insert, then the Python retry (59 updates), the schema change, the command-line retry (29 updates), the delete, and the re-embed (32 updates). The default insert that failed left no version.
 
 If you stop the chunked insert partway, the timeout count can come out a few lower. The stand-in remembers every photo it timed out, including photos in the chunk you stopped, and it times out each photo only once.
 
@@ -141,7 +143,7 @@ Run `uv sync` from this folder, register the kernel as above, then pick `rerun-f
 
 ### The timeouts fail again on retry
 
-The stand-ins remember which photos they timed out only while the notebook kernel is running. Run the retry from the notebook, in the same kernel as the insert. `pxt recompute ... --errors-only` runs in a new process, so each of those photos times out once more there.
+The stand-ins remember which photos they timed out only while the notebook kernel is running. Run the first retry from the notebook, in the same kernel as the insert. `pxt recompute ... --errors-only` runs in a new process, so if you use it for the timeouts, each of those photos times out once more there. The notebook's command-line retry comes after the timeouts are fixed, so it doesn't hit this.
 
 ### Duplicate primary key on insert
 
