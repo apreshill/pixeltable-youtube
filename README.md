@@ -85,6 +85,7 @@ Each video has its own README with recipes, expected output, and troubleshooting
 - [`nemotron-transcribe`](nemotron-transcribe/README.md)
 - [`rerun-failures`](rerun-failures/README.md)
 - [`brand-studio`](brand-studio/README.md)
+- [`off-label-doors`](off-label-doors/README.md)
 
 ## Expected Output
 
@@ -169,6 +170,11 @@ pixeltable-youtube/
     sample_data.py
     brand_kits/
     scripts/
+  off-label-doors/
+    README.md
+    off-label-doors.ipynb
+    schema.py
+    udfs.py
 ```
 
 The local Pixeltable catalog is under `~/.pixeltable`. It is not stored in this repo.
@@ -200,3 +206,4 @@ In `simpler-rag`, run the notebook from the top. The reset cell after `uv sync` 
 - [`branded-newsletter-visuals` README](branded-newsletter-visuals/README.md)
 - [`nemotron-transcribe` README](nemotron-transcribe/README.md)
 - [`rerun-failures` README](rerun-failures/README.md)
+- [`off-label-doors` README](off-label-doors/README.md)

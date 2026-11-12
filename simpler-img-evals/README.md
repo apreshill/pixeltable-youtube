@@ -1,18 +1,30 @@
 # Image Evals Are Simpler Than You Think
 
-If your product generates or edits images, OpenAI's [image evals cookbook](https://developers.openai.com/cookbook/examples/multimodal/image_evals) shows a sound way to grade them. Check the hard requirements first, then score quality from 0 to 5, then tag how each image failed. To run it, OpenAI built a custom harness of three packages that call the image model, save the images, and run the judge. Using the method yourself usually means building something like that next to your app: an eval script that pulls the images out, grades them, stores the scores somewhere else, and has to change every time the app does.
+If your product generates or edits images, OpenAI's [image evals cookbook](https://developers.openai.com/cookbook/examples/multimodal/image_evals) shows how to grade them, and running it usually means a second system next to your app. In this tutorial, the app makes and keeps its images in Pixeltable, and the same tables grade them, with each grade in a column next to its image.
+
+To run the cookbook's method, OpenAI wrote what they call a vision eval harness: its own Python package that makes the images and grades them. Using the method yourself usually means an eval script next to your app, one that:
+
+- pulls the images out and grades them
+- stores the scores somewhere else
+- has to change every time the app does
 
 You do need the grades, because image models fail quietly. A flyer with a misspelled line or a try-on that changed the person's face looks like any other image until someone reads it.
 
-In this tutorial, the grade is one more step on the table the images already live in. Mark an image ready, and the judge grades it and saves the grade next to the image. A new image gets graded the same way, and so does every image that was already there. When you change the rubric and re-grade, only the grade runs again: judge calls, no image calls. There is no separate eval script to keep in step with the app. Teams building on Pixeltable already grade their outputs this way.
+Here, the judge is a vision model (GPT-5.2) that scores each image. The rubric is the pass rules for each kind of image, in plain Python. The judge's call is a column, so:
+
+- When you mark an image ready, the judge grades it, and the grade lands in the same row as the image.
+- Images you add later get graded when you mark them ready, the same as the ones already in the table.
+- When you change the rubric, restart the notebook's kernel and recompute only the grade. No image gets made again.
+
+There is no separate eval script to keep in step with the app.
 
 ## How an image is graded
 
-The grading runs three checks in order, following the OpenAI cookbook.
+The grading follows the OpenAI cookbook. The judge returns the gates and the scores in one call, and the rubric's Python turns its answer into a verdict and tags.
 
-1. Gates first. Check the hard requirements, for example required text or an edit that must stay in one place. A gate failure fails the image even if it looks good.
-2. Graded scores next. For the images that clear the gates, score quality from 0 to 5 so you can rank them.
-3. Failure tags last. Label how an image failed, for example `text_garbled` or `identity_drift`, so the next fix has a target.
+1. Gates. Check the hard requirements, for example the required text on a UI mockup or a flyer. A failed gate fails the image whatever its scores. The two edit jobs have no gates.
+2. Graded scores. Score quality from 0 to 5 so you can rank images. Each rubric sets the lowest passing score.
+3. Failure tags. Label how an image failed, for example `text_garbled` or `identity_drift`, so the next fix has a target.
 
 The demo grades four kinds of images. Two are made from a prompt, and two are edits of reference images. The last column says which recipe in [`image-evals-simpler.ipynb`](image-evals-simpler.ipynb) shows each one.
 
@@ -27,7 +39,7 @@ Recipe 4 tightens the logo rubric and re-grades without making new images. Open 
 
 ## Technical Architecture
 
-Pixeltable is the database. It stores the inputs, the images, and the grades, and it makes the model calls. The catalog directory is `img_eval`.
+The tables and views in [`schema.py`](schema.py) hold the inputs, the images, and the grades, all in the `img_eval` directory. The model calls are columns too, and they run when you insert a row or mark it ready.
 
 1. **Base tables**
    - `generations` holds text-to-image rows for UI mockups and marketing flyers. The `image` column is produced by `openai.image_generations`.
@@ -58,7 +70,9 @@ The inputs you insert are mutable. You can call `update(...)` to change a prompt
 
 Each row has two prompt fields. `gen_prompt` is sent to the image model. `prompt` is the instruction shown to the judge. They often hold the same text. You can set them apart when you want the judge to grade against different wording than the model saw.
 
-The judge output is stored with each row. To re-grade after you change a rubric, recompute the `judge_raw` column on the view, as shown in [`image-evals-simpler.ipynb`](image-evals-simpler.ipynb). A re-grade makes judge calls only. The images are not made again, so it makes no image calls.
+The judge output is stored with each row. To re-grade after a threshold change, Recipe 4 in [`image-evals-simpler.ipynb`](image-evals-simpler.ipynb) recomputes only the `verdict` and `tags` columns on the view. That makes no judge calls and no image calls. When you change the judge's prompt or JSON schema, recompute `judge_raw` instead, which makes one judge call per row and still no image calls.
+
+Python keeps the rubric it loaded first. After you edit a `rubric.py`, restart the notebook's kernel before you recompute, and run `uv run pxt daemon restart` before a `pxt recompute`.
 
 Editing uses Gemini. `generate_content` accepts several reference images in one call, which virtual try-on needs, because it passes both the person and the garment. The built-in Pixeltable function for OpenAI image edits takes a single image.
 
@@ -92,7 +106,7 @@ cd simpler-img-evals
 uv sync
 ```
 
-Set both keys in your shell, then restart the `pxt` daemon so it picks them up.
+Set both keys in your shell, then restart the `pxt` daemon so it picks them up. Start Jupyter or your editor from that same shell.
 
 ```bash
 export OPENAI_API_KEY=...
@@ -100,11 +114,11 @@ export GEMINI_API_KEY=...
 uv run pxt daemon restart
 ```
 
-Pixeltable reads provider keys from your environment or from `~/.pixeltable/config.toml`. It does not read a `.env` file. To keep the keys across shells, add the two `export` lines to your shell profile, or put the keys in `config.toml` (see the [configuration docs](https://docs.pixeltable.com/platform/configuration)). The `pxt` daemon makes the model calls and reads the keys once, when it starts, so restart it after you set or change a key.
+Pixeltable reads provider keys from your environment or from `~/.pixeltable/config.toml`. It does not read a `.env` file. To keep the keys across shells, add the two `export` lines to your shell profile, or put the keys in `config.toml` (see the [configuration docs](https://docs.pixeltable.com/platform/configuration)). The notebook's model calls run in its kernel, and `pxt` commands run in the `pxt` daemon. Each reads the keys once, when it starts, so restart the kernel and the daemon after you set or change a key.
 
 ### 3. Register the Kernel
 
-Register this folder's `.venv` as a Jupyter kernel named `simpler-img-evals`. The notebook is set to use it.
+Register this folder's `.venv` as a Jupyter kernel named `simpler-img-evals`, so Jupyter, Cursor, or VS Code can run the notebook with this project's packages.
 
 ```bash
 uv run python -m ipykernel install --user --name simpler-img-evals --display-name simpler-img-evals
@@ -128,7 +142,7 @@ Open `image-evals-simpler.ipynb`. In Jupyter, Cursor, or VS Code, pick the `simp
 
 ### When Installing Dependencies
 
-`uv sync` creates `simpler-img-evals/.venv` and installs Pixeltable 0.7.11 or newer, plus OpenAI, Google GenAI, Pillow, and Jupyter.
+`uv sync` creates `simpler-img-evals/.venv` and installs Pixeltable 0.7.24, plus OpenAI, Google GenAI, Pillow, and Jupyter.
 
 ### When Applying the Schema
 
@@ -165,7 +179,12 @@ Run `image-evals-simpler.ipynb` from top to bottom.
 5. Set `eval_ready` to true. The views run the judge.
 6. Read the verdict, scores, and tags next to each image
 
-Later cells generate a new UI mockup, run a logo edit, run a try-on, re-grade without regenerating, and delete the demo batch.
+Later cells do the rest:
+
+- grade the seed logo edit and try-on
+- make and grade one new logo edit
+- tighten the logo rubric and re-grade without new images
+- delete the sample rows
 
 To browse the rows and images in a browser, run `uv run pxt dashboard` from this folder.
 
@@ -228,7 +247,7 @@ Run `uv sync` from `simpler-img-evals/`, register the kernel (Setup step 3), the
 
 ### Images or verdicts are empty
 
-Set `OPENAI_API_KEY` and `GEMINI_API_KEY` where the `pxt` daemon runs. Restart the daemon if you set the keys after it started. From this folder:
+Set `OPENAI_API_KEY` and `GEMINI_API_KEY` in the shell that starts Jupyter and the `pxt` daemon. If you set the keys after they started, restart the notebook's kernel, and restart the daemon from this folder:
 
 ```bash
 uv run pxt daemon restart
@@ -236,13 +255,13 @@ uv run pxt daemon restart
 
 ### `uv sync` warns that `VIRTUAL_ENV` does not match
 
-Another virtual environment is active in the shell that started Jupyter or your editor. uv ignores it and uses `simpler-img-evals/.venv`, so the sync still works. To clear the warning, run `deactivate` or open a new terminal, then start Jupyter again from `simpler-img-evals/`.
+Another virtual environment is active in the shell that started Jupyter or your editor. uv ignores it and uses `simpler-img-evals/.venv`, so the sync still works. Run `deactivate` or open a new terminal to clear the warning, then start Jupyter again from `simpler-img-evals/`.
 
 ## Project Details
 
 ### Dependencies
 
-- Pixeltable 0.7.11 or newer. Tables, computed columns, views, and `pxt schema`.
+- Pixeltable 0.7.24. Tables, computed columns, views, and `pxt schema`.
 - OpenAI. Text-to-image generation and the vision judge.
 - Google GenAI. Image edits.
 - Pillow. Image values in the edit helper.

@@ -44,7 +44,7 @@ BRANDS = {
         ],
         'type_spec': {
             # What the wordmark is made of, and how it looks in words, for prompts that describe the letters.
-            'wordmark': {'style': 'geometric caps', 'look': 'thin, geometric sans-serif capitals with very wide letter spacing'},
+            'wordmark': {'style': 'geometric caps', 'look': 'thin, geometric sans-serif capitals with very wide letter spacing, the space between letters nearly as wide as the letters themselves'},
             'headline': {'family': 'Jost Medium', 'weight': 500, 'leading': 1.02},
             'accent': {'family': 'Cormorant Garamond Medium Italic', 'weight': 500, 'scale': 1.18},
             'body': {'family': 'Jost Regular', 'weight': 400},
@@ -131,11 +131,11 @@ CAMPAIGNS = [
 
 # Ideas: one row per campaign visual. Gemini writes the prompt for each.
 IDEAS = [
-    {'campaign': 'morning-edit', 'idea': 'The steam on the bathroom mirror reveals both names as clean letters of clear glass, outlined by steam.'},
+    {'campaign': 'morning-edit', 'idea': 'The bathroom mirror is fogged with steam from the shower, and both logos stay clear in it.'},
     {'campaign': 'morning-edit', 'idea': 'Both names woven into the label of a waffle-weave bath towel.'},
     {'campaign': 'morning-edit', 'idea': 'Both names printed into a natural coir doormat at the bathroom door.'},
     {'campaign': 'morning-edit', 'idea': 'Both names set into the bathroom floor in classic hexagon mosaic tile.'},
-    {'campaign': 'stay-out-late', 'idea': 'Steam from the bath covers a vintage mirror propped in the garden, and both names show through the steam as clean letters of clear glass.'},
+    {'campaign': 'stay-out-late', 'idea': 'A vintage mirror propped in the garden is fogged with steam from the bath, and both logos stay clear in it.'},
     {'campaign': 'stay-out-late', 'idea': 'Both names cross-stitched into a folded gingham cloth on a stool beside the tub.'},
     {'campaign': 'stay-out-late', 'idea': 'Both names woven into the label of a towel draped over the rim of the tub.'},
     {'campaign': 'stay-out-late', 'idea': 'Both names pressed into a bar of soap on a wooden bath rack across the tub.'},

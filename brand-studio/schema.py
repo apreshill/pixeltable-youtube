@@ -3,8 +3,8 @@
 - `brands`: one row per brand kit. Your own brand has `house = True`; every other brand is a partner.
 - `campaigns`: one row per collab campaign: the partner, the theme, and the creative direction.
 - `ideas`: one row per idea for a campaign. Gemini reads both brand kits, the campaign, and the idea,
-  and writes the visual prompt. Nano Banana Pro makes the image from that prompt and both logos.
-  Gemini reviews it. All of it is stored on the idea's own row.
+  and writes two prompts. Nano Banana Pro makes the scene from the first, then edits the logos into
+  it from the second. Gemini signs it off. All of it is stored on the idea's own row.
 
 Every prompt is a column, built from other columns with `pxtf.string.format`.
 
@@ -31,19 +31,21 @@ ART_DIRECTION = (
     'its light, colors, surfaces, props, mood, and what it never shows.\n\n{style_guide}'
 )
 
-# How the names are made in a material. The director writes to these rules and the reviewer checks
-# them, so both work to the same standard.
-CRAFT = """How the names are made, by material:
-- Revealed in steam on glass: the letters are clean, exact letterforms in each brand's own typeface, as if the glass had been masked in their shape before the steam rose. Dense, even steam covers the whole glass from edge to edge, and the only clear glass anywhere is inside the letters: each letter is crisp, bare glass holding a sharp, full-color reflection of the room, outlined by the soft, milky steam around it. The letters have no color, ink, or thickness of their own; they are readable only because of the steam around them.
-- Built from pieces, such as mosaic tile, cross-stitch, or beads: each letter is made only of whole pieces in a contrasting color, set into the same grid as the rest of the surface, with stepped edges where a curve meets the grid. The letters follow the logos as closely as whole pieces allow.
-- Printed, woven, pressed, or stamped, such as ink in coir, thread in a label, or a mold in soap: the letters sit in the material, with its texture showing through them.
-- In every case, the letters lie flat on the surface that carries them, in its perspective, and the edges of that surface are in the frame."""
+# How the logos are made in each material, written as what the camera sees. Each visual is made in two
+# steps: the scene with a plain surface, then an edit that makes the logos in that surface.
+CRAFT = """How the logos are made, by material. For each, first the plain surface, then the logos in it:
+- Steam on a mirror. Plain: thick white condensation covers the whole mirror in one unbroken, even layer, from the center out to all four edges of its frame, the way a mirror fogs after a long hot shower. The fog is dense and milky, a bright, pale white like frosted glass, and the room behind it shows only as faint pale shapes. Logos: the condensation is gone inside the letter shapes, as if the mirror had stayed dry there. Each letter is a clear window in the fog that shows the sharp reflection of the room, in its full, deeper color, much darker than the white fog around it. Its edge is the soft line where the condensation stops. The fog everywhere else stays as it is.
+- Tile, stitches, or beads. Plain: the surface in one color, in a regular grid. Logos: the letters are tiles (or stitches, or beads) of a second color, much darker or much lighter than the first, laid in the same grid.
+- Thread, ink, or a mold. Plain: the blank label, mat, or bar. Logos: the letters are woven into the label, printed into the fibers, or pressed into the soap, and the material's own texture runs through them.
+In every material, the logos are the strongest contrast in the photograph, easy to read at a glance from across a room."""
 
-# The creative director's brief. Gemini turns the inputs into one image prompt, following Google's
-# Nano Banana prompting guide: a strong verb, a narrative scene, positive framing, camera and light,
-# real materials, exact quoted text with its letterforms, and each reference image named.
+# The creative director's brief. Gemini turns the inputs into two prompts for Nano Banana Pro: one
+# for the scene, and one for the edit that makes the logos in it. The letters themselves are never
+# drawn by a model: code places the real logos on the scene as a guide, and the edit gives them the material.
 DIRECTOR = (
-    """You are the creative director for a brand collaboration between {house} and {partner}. Write the prompt that Nano Banana Pro will use to make one campaign visual.
+    """You are the creative director for a brand collaboration between {house} and {partner}. Write the two prompts that Nano Banana Pro will use to make one campaign photograph.
+
+The job of the photograph is to show the two logos together: "{house}" above "{partner}", with a small "×" between them to mark the collaboration. The logos are made from something real in the scene. The idea below says what.
 
 The campaign theme: {theme}
 The creative direction: {direction}
@@ -51,48 +53,80 @@ This visual: {idea}
 
 How {house} looks: {house_look}
 How {partner} looks: {partner_look}
-The two attached pictures are the brand boards of {house} and {partner}: their logos, type, and palettes.
+Use the two looks for the palette, surfaces, light, and props. Where they differ, follow the creative direction. The two attached pictures are the brand boards.
 
 """
     + CRAFT
     + """
 
-Write one image prompt of 120 to 180 words that follows Google's guidance for Nano Banana Pro:
-- Start with a strong verb. In the first three sentences, name the surface that carries the names, how the names are made in it, and both names in quotes, spelled exactly "{house}" and "{partner}": "{house}" in {house_wordmark}, and "{partner}" in {partner_wordmark}.
-- Then describe the setting, the composition, and the style as a story, in positive terms.
-- Direct the camera and the light: the lens, the aperture, the angle, and the quality of the light. Photograph a mirror or any glass from about 30 degrees to one side, so its frame shows and its reflection holds the room, never the camera.
-- Name real materials and textures. Keep the frame to the surface with the names and at most two props from the brands' own prop lists.
-- Nano Banana Pro will receive two reference images. Say that Image 1 is the {house} logo and Image 2 is the {partner} logo, and that they give only the shapes of the letters: in the scene, the letters take the color and texture of the material.
-- This is a luxury campaign photograph: clean, immaculate, beautifully styled, photoreal, a still life with no people. Vertical, 9:16.
+The photograph is made in two steps, so write two prompts, in plain, concrete words for what the camera sees.
 
-Return only the prompt."""
+scene_prompt, 100 to 150 words: the photograph before the logos are made. Open with the surface that will carry them, plain and unmarked, the same from edge to edge, filling most of the frame with its edges visible. Shoot the surface square-on, so it sits flat in the frame like a poster: a mirror or a wall from straight in front, a floor or a mat from directly above. A mirror reflects the room, with no camera in it. Then the room around it, with at most two props, the light, and the camera: lens and aperture. Say that it is a clean, immaculate, photoreal still life for a luxury beauty campaign, with no people. The photograph is vertical, 9:16.
+
+logo_prompt, 50 to 90 words: an instruction to edit that photograph. Nano Banana Pro gets two images: first the photograph, then a guide, which is the same photograph with the logos marked on the surface in flat magenta. Tell it to return the first photograph unchanged, except inside the magenta shapes of the guide, at exactly their position, size, and outline. Say what the surface becomes inside those shapes, physically, as the material guidance above describes it, and that no magenta is left in the result.
+
+surface: the surface that carries the logos, in a few words, as the scene prompt names it, such as "the fogged glass of the mirror"."""
 )
 
-# The brand review: Gemini checks each image against both brands, the same craft rules, and the prompt it was made from.
-REVIEW = (
-    """You are the brand reviewer for a collaboration between {house} and {partner}. Image 1 is the shot to review.
-It was made for this visual: {idea}
-The image model was given this prompt: {visual_prompt}
+DIRECTOR_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'scene_prompt': {'type': 'string'},
+        'logo_prompt': {'type': 'string'},
+        'surface': {'type': 'string'},
+    },
+    'required': ['scene_prompt', 'logo_prompt', 'surface'],
+}
 
-"""
-    + CRAFT
-    + """
-
-Read every word in the shot. The names must be spelled and cased exactly "{house}" and "{partner}", with letterforms that match the logos (for letters built from pieces, as closely as the pieces allow).
-Blocking, the shot cannot ship: a misspelled or misshapen name; letters that look printed, painted, or inked on when the rules above say they are revealed in the material or built from it; letters floating in their own plane instead of lying on the surface that carries them; anything dirty, worn, or cluttered; a person or part of one; any other words.
-Minor, note it but do not block: small artifacts in background objects, slightly soft edges, light that is a little off.
-Approve only if nothing is blocking."""
+# Where the surface is in the scene, so the logos can be placed on it. Gemini's own box convention.
+LOCATE = (
+    'Find {surface} in this photograph. Return the box around the surface itself, inside any frame or border, '
+    'as ymin, xmin, ymax, xmax: whole numbers from 0 to 1000, as fractions of the image height and width.'
 )
+
+BOX_SCHEMA = {
+    'type': 'object',
+    'properties': {k: {'type': 'integer'} for k in ('ymin', 'xmin', 'ymax', 'xmax')},
+    'required': ['ymin', 'xmin', 'ymax', 'xmax'],
+}
+
+# The sign-off. The house brand's chief marketing officer looks at each shot and decides whether it goes in the
+# campaign: true to both brands, true to the campaign, logos right, and restrained.
+REVIEW = """You are the founding chief marketing officer of {house}, signing off the creative for your collaboration with {partner}. You know both brands well, and you protect both. Your taste is restraint: a clear point of view, one signature look for the campaign, and nothing in the frame that does not earn its place.
+
+Image 1 is the shot. Image 2 is the {house} logo and Image 3 is the {partner} logo. The letter shapes in the shot were traced from these two logo files, so they are correct: do not judge the typeface or the letter shapes.
+
+The campaign theme: {theme}
+The creative direction: {direction}
+The idea for this shot: {idea}
+
+How {house} looks: {house_look}
+How {partner} looks: {partner_look}
+The two brands differ in places. The creative direction is the agreed blend, so judge each brand's look through it.
+
+Look at the shot the way you would in a creative review, and answer each question with yes or no and one short note on what you see:
+- house: is the shot true to {house}?
+- partner: is the shot true to {partner}?
+- campaign: does it deliver the theme and the creative direction?
+- logos: can you read "{house}", the small "×", and "{partner}" at a glance, as the first thing you see in the shot, and do they look physically made from the scene as the idea describes, not etched, printed, or laid over the photo?
+- restraint: is it clean, uncluttered, and free of people and of any other words?
+
+Then list what you would ask the studio to fix, most important first. Approve the shot only if every answer is yes."""
+
+_ANSWER = {'type': 'object', 'properties': {'yes': {'type': 'boolean'}, 'note': {'type': 'string'}}, 'required': ['yes', 'note']}
 
 REVIEW_SCHEMA = {
     'type': 'object',
     'properties': {
-        'text_seen': {'type': 'string'},
-        'blocking': {'type': 'array', 'items': {'type': 'string'}},
-        'minor': {'type': 'array', 'items': {'type': 'string'}},
+        'house': _ANSWER,
+        'partner': _ANSWER,
+        'campaign': _ANSWER,
+        'logos': _ANSWER,
+        'restraint': _ANSWER,
+        'fixes': {'type': 'array', 'items': {'type': 'string'}},
         'approved': {'type': 'boolean'},
     },
-    'required': ['text_seen', 'blocking', 'minor', 'approved'],
+    'required': ['house', 'partner', 'campaign', 'logos', 'restraint', 'fixes', 'approved'],
 }
 
 
@@ -178,30 +212,62 @@ class Ideas(TableModel, name='ideas'):
     house = house_kit()
     guest = brand_kit(brief['partner'])
 
-    # 1. Gemini, as creative director, writes the visual prompt from the inputs.
+    # 1. Gemini, as creative director, writes two prompts from the inputs: the scene, and the logos in it.
     director_prompt = pxtf.string.format(
         DIRECTOR,
         house=house['name'],
         partner=guest['name'],
         house_look=house.look,
         partner_look=guest.look,
-        house_wordmark=house.wordmark,
-        partner_wordmark=guest.wordmark,
         theme=brief.theme,
         direction=brief.direction,
         idea=idea,
     )
-    director_response = pxtf.gemini.generate_content([director_prompt, house.board, guest.board], model=DIRECTOR_MODEL)
-    visual_prompt = director_response.candidates[0].content.parts[0].text.astype(pxt.String)
+    director_response = pxtf.gemini.generate_content(
+        [director_prompt, house.board, guest.board],
+        model=DIRECTOR_MODEL,
+        config={'response_mime_type': 'application/json', 'response_json_schema': DIRECTOR_SCHEMA},
+    )
+    prompts = udfs.parse_json(director_response.candidates[0].content.parts[0].text.astype(pxt.String))
+    scene_prompt = prompts['scene_prompt'].astype(pxt.String)
+    logo_prompt = prompts['logo_prompt'].astype(pxt.String)
+    surface = prompts['surface'].astype(pxt.String)
 
-    # 2. Nano Banana Pro makes the image from Gemini's prompt, with both logos attached.
-    image_response = pxtf.gemini.generate_content([house.logo, guest.logo, visual_prompt], model=IMAGE_MODEL, config=IMAGE_CONFIG)
+    # 2. Nano Banana Pro makes the scene, with a plain surface and no logos yet.
+    scene_response = pxtf.gemini.generate_content(scene_prompt, model=IMAGE_MODEL, config=IMAGE_CONFIG)
+    scene = udfs.first_image(scene_response)
+
+    # 3. Code places the real logos on the scene. Gemini says where the surface is; Pillow builds the
+    #    lockup from both logos and marks it on the surface in flat magenta. No model draws a letter.
+    locate_prompt = pxtf.string.format(LOCATE, surface=surface)
+    locate_response = pxtf.gemini.generate_content(
+        [scene, locate_prompt],
+        model=TEXT_MODEL,
+        config={'response_mime_type': 'application/json', 'response_json_schema': BOX_SCHEMA},
+    )
+    surface_box = udfs.parse_json(locate_response.candidates[0].content.parts[0].text.astype(pxt.String))
+    house_stencil = udfs.logo_stencil(house.logo)
+    guest_stencil = udfs.logo_stencil(guest.logo)
+    lockup = udfs.logo_lockup(house_stencil, guest_stencil)
+    guide = udfs.logo_guide(scene, lockup, surface_box)
+
+    # 4. Nano Banana Pro edits the scene: inside the marked shapes, the surface becomes the material.
+    image_response = pxtf.gemini.generate_content([scene, guide, logo_prompt], model=IMAGE_MODEL, config=IMAGE_CONFIG)
     image = udfs.first_image(image_response)
 
-    # 3. Gemini reviews the image against both brands.
-    review_prompt = pxtf.string.format(REVIEW, house=house['name'], partner=guest['name'], idea=idea, visual_prompt=visual_prompt)
+    # 5. Gemini, as the house brand's CMO, signs off the shot against both brands and the campaign.
+    review_prompt = pxtf.string.format(
+        REVIEW,
+        house=house['name'],
+        partner=guest['name'],
+        house_look=house.look,
+        partner_look=guest.look,
+        theme=brief.theme,
+        direction=brief.direction,
+        idea=idea,
+    )
     review_response = pxtf.gemini.generate_content(
-        [image, review_prompt],
+        [image, house.logo, guest.logo, review_prompt],
         model=DIRECTOR_MODEL,
         config={'response_mime_type': 'application/json', 'response_json_schema': REVIEW_SCHEMA},
     )

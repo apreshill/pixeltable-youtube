@@ -448,6 +448,67 @@ def packshot_input(prompt: str, visuals: pxt.Json, photo: pxt.Image | None) -> p
 
 
 @pxt.udf
+def logo_stencil(logo: pxt.Image) -> pxt.Image:
+    """A logo as a stencil: its letter shapes in white on black, with none of the logo's own color."""
+    rgba = logo.convert('RGBA')
+    alpha = rgba.getchannel('A')
+    if alpha.getextrema()[0] < 255:
+        mask = alpha  # a transparent logo: the letters are wherever it is opaque
+    else:
+        mask = ImageOps.invert(rgba.convert('L'))  # dark ink on white: the letters are the dark parts
+    pad = mask.height // 3
+    out = Image.new('L', (mask.width + 2 * pad, mask.height + 2 * pad), 0)
+    out.paste(mask, (pad, pad))
+    return out.convert('RGB')
+
+
+def _ink(stencil: Image.Image) -> Image.Image:
+    """A stencil cropped to its letters, as a mask."""
+    mask = stencil.convert('L')
+    return mask.crop(mask.getbbox())
+
+
+@pxt.udf
+def logo_lockup(house_stencil: pxt.Image, guest_stencil: pxt.Image) -> pxt.Image:
+    """The collaboration lockup: the house logo, a small x, and the partner logo, stacked. White on black."""
+    top, bottom = _ink(house_stencil), _ink(guest_stencil)
+    height = max(top.height, bottom.height)
+    cross, gap = round(height * 0.34), round(height * 0.42)
+    width = max(top.width, bottom.width)
+    out = Image.new('L', (width, top.height + gap + cross + gap + bottom.height), 0)
+    out.paste(top, ((width - top.width) // 2, 0))
+    x0, y0 = (width - cross) // 2, top.height + gap
+    stroke = max(4, round(height * 0.045))
+    draw = ImageDraw.Draw(out)
+    draw.line([(x0, y0), (x0 + cross, y0 + cross)], fill=255, width=stroke)
+    draw.line([(x0 + cross, y0), (x0, y0 + cross)], fill=255, width=stroke)
+    out.paste(bottom, ((width - bottom.width) // 2, y0 + cross + gap))
+    return out.convert('RGB')
+
+
+GUIDE_COLOR = (255, 0, 255)  # magenta: a color no scene has, so the image model can tell the marks from the photo
+
+
+@pxt.udf
+def logo_guide(scene: pxt.Image, lockup: pxt.Image, box: pxt.Json) -> pxt.Image:
+    """The scene with the lockup marked on its surface in flat magenta, centered in the surface's box.
+
+    `box` is where the surface is, as ymin, xmin, ymax, xmax from 0 to 1000. The lockup spans about
+    two thirds of the surface's width, and no more than half its height.
+    """
+    scene = scene.convert('RGB')
+    x0, x1 = (box[k] / 1000 * scene.width for k in ('xmin', 'xmax'))
+    y0, y1 = (box[k] / 1000 * scene.height for k in ('ymin', 'ymax'))
+    mask = lockup.convert('L')
+    scale = min((x1 - x0) * 0.64 / mask.width, (y1 - y0) * 0.5 / mask.height)
+    mask = mask.resize((max(1, round(mask.width * scale)), max(1, round(mask.height * scale))), Image.LANCZOS)
+    left, top = round((x0 + x1) / 2 - mask.width / 2), round((y0 + y1) / 2 - mask.height / 2)
+    out = scene.copy()
+    out.paste(Image.new('RGB', mask.size, GUIDE_COLOR), (left, top), mask)
+    return out
+
+
+@pxt.udf
 def first_image(response: pxt.Json) -> pxt.Image:
     """The image part of a Gemini response."""
     # Thinking models can return draft images marked as thoughts. The answer is the last image that is not one.
