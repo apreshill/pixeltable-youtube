@@ -1,0 +1,13 @@
+# pixeltable 0.7.25, 2026-11-23, sandbox, stand-in only (no API calls); pxt schema update schema.py verify, then python verify_claims.py
+1. default insert: how many model calls happen before the insert is refused?
+   refused: Expected string, got list
+   calls: ['desk-lamp-1', 'film-camera-1', 'guitar-1', 'backpack-1', 'cruiser-bike-1', 'salt-lamp-1'] | rows stored: 0
+2. on_error='ignore', then errors_only=True on response (the call worked, so no rows?)
+Inserted 6 rows with 2 errors across 1 column (listings.details) in 0.04 s (144.86 rows/s)
+   rows rerun: 0 | calls: [] | still failed: 2
+3. does the check pass a condition that isn't one of the Literal values?
+Created table 'literal'.
+Added 0 column values with 0 errors in 0.00 s
+Inserted 1 row with 0 errors in 0.00 s (354.35 rows/s)
+      details_condition details_errortype
+0       barely used              None

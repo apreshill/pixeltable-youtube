@@ -1,0 +1,25 @@
+# pixeltable 0.7.25, 2026-11-23, sandbox Pixeltable home (6 real gemini-3.8-flash calls)
+$ python gemini_probe.py
+pixeltable 0.7.25
+Creating a Pixeltable instance at: ./.pxt-home
+Connected to Pixeltable database at: postgresql+psycopg://postgres:***@/pixeltable?host=%2Fvar%2Ffolders%2Fzz%2Fd4wytf2s44996j3sr4zgthw80000gn%2FT%2F0aa920adff
+Created directory 'probe'.
+Created table 'listings'.
+Added 0 column values with 0 errors in 0.00 s
+Added 0 column values with 0 errors in 0.00 s
+Inserted 6 rows with 0 errors in 20.85 s (0.29 rows/s)
+UpdateStatus(updated_cols=[], cols_with_excs=[], rows=None, row_count_stats=RowCountStats(inserted_rows=6, deleted_rows=0, updated_rows=0, num_excs=0, skipped_rows=0), cascade_row_count_stats=RowCountStats(inserted_rows=0, deleted_rows=0, updated_rows=0, num_excs=0, skipped_rows=0))
+desk-lamp-1 | pxt check: None | pydantic: ok | tokens in/out: 1108 83 608
+    {'color': 'black', 'pitch': 'Brighten your workspace with this sleek black adjustable desk lamp. It delivers flexible positioning and bright, focused illumination.', 'title': 'Black Adjustable LED Desk Lamp', 'category': 'home', 'condition': 'like new', 'description': 'This black desk lamp features an adjustable articulated arm and a solid round base. It has an elongated lamp head emitting a bright white light and includes an attached power cable.'}
+backpack-1 | pxt check: None | pydantic: ok | tokens in/out: 1108 102 533
+    {'color': 'Brown', 'pitch': 'Carry your essentials in classic style with this handsome brown backpack. It features twin front pockets and secure buckle closures.', 'title': 'Brown Leather Flap Backpack with Front Pockets', 'category': 'bags', 'condition': 'like new', 'description': 'This brown leather backpack features a rounded top flap secured by a brass-tone buckle and a sturdy top carry handle. Two matching flap pockets with buckle straps sit on the lower front. The exterior shows neat perimeter stitching with a subtle mottled finish.'}
+salt-lamp-1 | pxt check: None | pydantic: ok | tokens in/out: 1108 98 467
+    {'color': 'Orange', 'pitch': 'Bring a cozy atmosphere to your space with this Himalayan salt lamp. It lights up with a warm amber tone.', 'title': 'Himalayan Salt Rock Lamp on Wooden Base', 'category': 'home', 'condition': 'good', 'description': 'This natural salt rock lamp is carved with an organic texture and mounted on a dark wooden base. When turned on, the internal light casts a soft, warm orange glow. A power cord extends from the back of the base.'}
+film-camera-1 | pxt check: None | pydantic: ok | tokens in/out: 1108 111 612
+    {'color': 'Silver', 'pitch': 'Take a look at this classic silver and black SLR camera. It features a clean body with all original dials intact.', 'title': 'Vintage Style SLR Film Camera in Silver and Black', 'category': 'cameras', 'condition': 'good', 'description': 'This manual SLR camera features a silver chrome top and base paired with a black textured body wrap. It is fitted with a central lens showing clear glass, along with top-mounted control dials and a prism viewfinder. The exterior is well-maintained with clean edges and minimal surface wear visible.'}
+guitar-1 | pxt check: None | pydantic: ok | tokens in/out: 1108 104 750
+    {'color': 'Natural', 'pitch': 'Check out this acoustic guitar featuring a natural wood finish. It is strung with six strings and ready to play.', 'title': '6-String Acoustic Guitar with Natural Finish', 'category': 'instruments', 'condition': 'good', 'description': 'This acoustic guitar features a natural wood finish soundboard accented by a black pickguard and a soundhole rosette. It is fully strung with six strings running over a dark fretboard and bridge. The body displays a traditional dreadnought shape in clean cosmetic condition.'}
+cruiser-bike-1 | pxt check: None | pydantic: ok | tokens in/out: 1108 116 828
+    {'color': 'Mint green', 'pitch': 'Ride in classic style with this vintage green cruiser featuring a front wicker basket. Check it out and make an offer today!', 'title': 'Vintage Mint Green Cruiser Bike with Wicker Basket', 'category': 'bikes', 'condition': 'fair', 'description': 'This cruiser bike features a mint green front fender and frame paired with a front wicker basket and a brown saddle. The chrome handlebars include brown grips, a black bell, and a right-hand brake lever. Noticeable cosmetic wear, chipped paint, and rust are visible on the fender and wheel spokes.'}
+[exit 0]
+

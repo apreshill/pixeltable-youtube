@@ -1,0 +1,45 @@
+# pixeltable 0.7.25
+$ python experiment_what_the_check_covers.py
+Connected to Pixeltable database at: postgresql+psycopg://postgres:***@/pixeltable?host=%2Fvar%2Ffolders%2Fzz%2Fd4wytf2s44996j3sr4zgthw80000gn%2FT%2Fafaf483fa3
+Created directory 'exp2'.
+Created table 't'.
+Added 0 column values with 0 errors in 0.00 s
+Added 0 column values with 0 errors in 0.00 s
+Inserted 5 rows with 5 errors across 2 columns (t.checked, t.validated) in 0.00 s (1099.80 rows/s)
+UpdateStatus(updated_cols=[], cols_with_excs=['t.checked', 't.validated'], rows=None, row_count_stats=RowCountStats(inserted_rows=5, deleted_rows=0, updated_rows=0, num_excs=5, skipped_rows=0), cascade_row_count_stats=RowCountStats(inserted_rows=0, deleted_rows=0, updated_rows=0, num_excs=0, skipped_rows=0))
+         case checked_errortype                   checked_errormsg validated_errortype
+0     literal               NaN                                NaN     ValidationError
+1     missing         TypeError  Missing required key: 'condition'     ValidationError
+2  wrong_type         TypeError           Expected string, got int     ValidationError
+3        good               NaN                                NaN                 NaN
+4   extra_key               NaN                                NaN                 NaN
+--- {'case': 'literal', 'validated_errormsg': "1 validation error for ListingDetails\ncondition\n  Input should be 'new', 'like new', 'good' or 'fair' [type=literal_error, input_value='barely used', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.14/v/literal_error", 'checked_condition': 'barely used', 'validated_condition': None}
+--- {'case': 'missing', 'validated_errormsg': "1 validation error for ListingDetails\ncondition\n  Field required [type=missing, input_value={'title': 'Lamp', 'catego...ion': 'd', 'pitch': 'p'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.14/v/missing", 'checked_condition': None, 'validated_condition': None}
+--- {'case': 'wrong_type', 'validated_errormsg': '1 validation error for ListingDetails\ncolor\n  Input should be a valid string [type=string_type, input_value=3, input_type=int]\n    For further information visit https://errors.pydantic.dev/2.14/v/string_type', 'checked_condition': None, 'validated_condition': None}
+--- {'case': 'good', 'validated_errormsg': None, 'checked_condition': 'good', 'validated_condition': 'good'}
+--- {'case': 'extra_key', 'validated_errormsg': None, 'checked_condition': 'good', 'validated_condition': 'good'}
+['case', 'answer', 'checked', 'validated']
+table 'exp2/t'
+
+ Column Name                                               Type Source                                      Computed With Comment
+---------------------------------------------------------------------------------------------------------------------------------
+        case                                             String      t                                                           
+      answer                                               Json      t                                                           
+     checked  Json[{'title': String, 'category': String, 'co...      t  answer.astype(Json[{'title': String, 'category...        
+   validated  Json[{'title': String, 'category': String, 'co...      t                           validate_listing(answer)        
+Created table 's'.
+Added 0 column values with 0 errors in 0.00 s
+Inserted 2 rows with 2 errors across 1 column (s.parsed) in 0.00 s (687.54 rows/s)
+UpdateStatus(updated_cols=[], cols_with_excs=['s.parsed'], rows=None, row_count_stats=RowCountStats(inserted_rows=2, deleted_rows=0, updated_rows=0, num_excs=2, skipped_rows=0), cascade_row_count_stats=RowCountStats(inserted_rows=0, deleted_rows=0, updated_rows=0, num_excs=0, skipped_rows=0))
+--- {'case': 'fenced', 'parsed_errortype': 'JSONDecodeError', 'parsed_errormsg': 'Expecting value: line 1 column 1 (char 0)'}
+--- {'case': 'trailing_comma', 'parsed_errortype': 'JSONDecodeError', 'parsed_errormsg': 'Illegal trailing comma before end of object: line 1 column 14 (char 13)'}
+RequestError In row 0 the expression validate_listing(answer) encountered exception ValidationError:
+1 validation error for ListingDetails
+condition
+  Input should be 'new', 'like new', 'good' or 'fair' [type=literal_error, input_value='barely used', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+with 'answer' = {'title': 'Lamp', 'category': 'home', 'condition': 'barely used', 'color': 'Black', 'description': 'd', 'pitch': 'p'}
+Stack:
+  File "<tmp>
+[exit 0]
+

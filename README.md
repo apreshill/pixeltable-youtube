@@ -86,6 +86,10 @@ Each video has its own README with recipes, expected output, and troubleshooting
 - [`rerun-failures`](rerun-failures/README.md)
 - [`brand-studio`](brand-studio/README.md)
 - [`off-label-doors`](off-label-doors/README.md)
+- [`media-to-llm`](media-to-llm/README.md)
+- [`check-llm-output`](check-llm-output/README.md)
+- [`keep-failed-answers`](keep-failed-answers/README.md)
+- [`trace-answers-to-media`](trace-answers-to-media/README.md)
 
 ## Expected Output
 
@@ -207,3 +211,7 @@ In `simpler-rag`, run the notebook from the top. The reset cell after `uv sync` 
 - [`nemotron-transcribe` README](nemotron-transcribe/README.md)
 - [`rerun-failures` README](rerun-failures/README.md)
 - [`off-label-doors` README](off-label-doors/README.md)
+- [`media-to-llm` README](media-to-llm/README.md)
+- [`check-llm-output` README](check-llm-output/README.md)
+- [`keep-failed-answers` README](keep-failed-answers/README.md)
+- [`trace-answers-to-media` README](trace-answers-to-media/README.md)

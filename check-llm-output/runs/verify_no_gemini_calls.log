@@ -1,0 +1,17 @@
+# pixeltable 0.7.25
+$ bash -c cd ~/Documents/Github/pixeltable-youtube/check-llm-output && bash runs/verify_no_gemini_calls.sh 2>&1 | grep -v '^Connected\|^Creating'
+created   verify_demo/photos
+Inserted 1 row with 1 error across 1 column (photos.prompt_only_details) in 15.28 s (0.07 rows/s)
+UpdateStatus(updated_cols=[], cols_with_excs=['photos.prompt_only_details'], rows=None, row_count_stats=RowCountStats(inserted_rows=1, deleted_rows=0, updated_rows=0, num_excs=1, skipped_rows=0), cascade_row_count_stats=RowCountStats(inserted_rows=0, deleted_rows=0, updated_rows=0, num_excs=0, skipped_rows=0))
+pxt: stopped daemon (PID 24104)
+GEMINI_API_KEY is unset for the update
+updated   verify_demo/photos
+       name standindetails_condition standinvalidated_condition stand_in_validated_errortype
+0  guitar-1                     good                       good                         None
+version	created_at	change_type	inserts	updates	deletes	errors	schema_change
+2	2026-11-23T22:13:22.533404Z	schema	0	1	0	0	Added: stand_in_answer, stand_in_details, stand_in_validated
+1	2026-11-23T22:13:03.011097Z	data	1	0	0	1	
+0	2026-11-23T22:13:00.457339Z	schema	0	0	0	0	Initial Version
+pxt: stopped daemon (PID 24141)
+[exit 0]
+

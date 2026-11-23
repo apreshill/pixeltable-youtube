@@ -1,0 +1,11 @@
+# pixeltable 0.7.25
+$ bash -c cd ~/Documents/Github/pixeltable-youtube/trace-answers-to-media && .venv/bin/python runs/check_local_file_spans.py ~/Documents/Github/pixeltable-marketplace/samples/salt-lamp-2.jpg
+Connected to Pixeltable database at: postgresql+psycopg://postgres:***@/pixeltable?host=%2Fvar%2Ffolders%2Fzz%2Fd4wytf2s44996j3sr4zgthw80000gn%2FT%2F2c7ec02fb8
+Created table 'local_check'.
+Added 0 column values with 0 errors in 0.00 s
+Inserted 1 row with 0 errors in 0.03 s (37.95 rows/s)
+salt-lamp-2.jpg -> []
+Inserted 1 row with 0 errors in 0.23 s (4.40 rows/s)
+salt-lamp-1.jpg -> ['pixeltable.media.fetch']
+[exit 0]
+

@@ -1,0 +1,385 @@
+[md 0]
+# Why the LLM's Answer Keeps Failing Validation
+
+In this video, I'm going to ask Gemini about the same five photos two ways, with one Pydantic model. With the schema only in the prompt, all five answers failed validation. With the schema in the request, all five passed.
+
+When an LLM's answer about your image fails validation, the error alone doesn't tell you why. In Pixeltable, a multimodal backend, each answer goes in its own column, and its check goes in the next column, on the same row as its photo.
+
+This question comes from a Pydantic AI issue called "Structured output validation keeps failing." First we'll find out why our answers failed, and then what the check covers and what it doesn't.
+
+[md 1]
+## Start from an empty `llm_output_demo` directory
+
+Start Jupyter with `uv run jupyter lab` in this folder, with your Gemini key in `GEMINI_API_KEY`. Each photo gets two paid calls to Gemini, and we'll use six photos, so that's 12 calls.
+
+In Pixeltable, a directory is a namespace for tables. We'll drop ours first, so every run starts empty.
+
+[2] In [1]:
+!uv sync
+[2mResolved [1m159 packages[0m [2min 2ms[0m[0m
+[2mAudited [1m149 packages[0m [2min 3ms[0m[0m
+
+[3] In [2]:
+import pixeltable as pxt
+import pixeltable.functions as pxtf
+
+# Start fresh: drop the tables from any earlier run.
+pxt.drop_dir('llm_output_demo', force=True, if_not_exists='ignore')
+Connected to Pixeltable database at: postgresql+psycopg://postgres:***@/pixeltable?host=%2Fvar%2Ffolders%2Fzz%2Fd4wytf2s44996j3sr4zgthw80000gn%2FT%2Fbb6b160b24
+
+[md 4]
+## `ListingDetails` is the answer we want for each photo
+
+`ListingDetails` is the Pydantic model from a marketplace app we built for our Pydantic webinar. `MODEL` is the Gemini model both calls use.
+
+`category` and `condition` are `Literal` types, so each one allows only the values listed.
+
+[5] In [3]:
+!sed -n '8,19p' listing.py
+MODEL = 'gemini-3.8-flash'
+
+
+class ListingDetails(BaseModel):
+    """What Gemini writes about a seller's photo."""
+
+    title: str = Field(description='A listing title, under 60 characters')
+    category: Literal['cameras', 'bikes', 'home', 'bags', 'instruments', 'other']
+    condition: Literal['new', 'like new', 'good', 'fair']
+    color: str
+    description: str = Field(description='Two or three sentences for buyers, about only what the photo shows')
+    pitch: str = Field(description='Narration for a 10-second listing video: two short spoken sentences, 15 to 25 words')
+
+[md 6]
+## The schema goes in the prompt, or in the request
+
+The first call pastes the JSON schema of `ListingDetails` into the prompt text. Here's how that prompt is built, and the whole prompt Gemini gets, next to the photo.
+
+[7] In [4]:
+!sed -n '22,25p' listing.py
+from listing import PROMPT_WITH_SCHEMA
+
+print(PROMPT_WITH_SCHEMA)
+PROMPT = 'Write a marketplace listing for the item in this photo. Describe only what the photo shows.'
+
+# The schema only in the prompt.
+PROMPT_WITH_SCHEMA = f'{PROMPT} Answer in JSON that matches this schema: {json.dumps(ListingDetails.model_json_schema())}'
+Write a marketplace listing for the item in this photo. Describe only what the photo shows. Answer in JSON that matches this schema: {"description": "What Gemini writes about a seller's photo.", "properties": {"title": {"description": "A listing title, under 60 characters", "title": "Title", "type": "string"}, "category": {"enum": ["cameras", "bikes", "home", "bags", "instruments", "other"], "title": "Category", "type": "string"}, "condition": {"enum": ["new", "like new", "good", "fair"], "title": "Condition", "type": "string"}, "color": {"title": "Color", "type": "string"}, "description": {"description": "Two or three sentences for buyers, about only what the photo shows", "title": "Description", "type": "string"}, "pitch": {"description": "Narration for a 10-second listing video: two short spoken sentences, 15 to 25 words", "title": "Pitch", "type": "string"}}, "required": ["title", "category", "condition", "color", "description", "pitch"], "title": "ListingDetails", "type": "object"}
+
+[md 8]
+The second call sends only `PROMPT`, the first line above. The schema goes in the request: `json_config` sets it as Gemini's `response_json_schema`.
+
+[9] In [5]:
+!sed -n '28,30p' listing.py
+def json_config(model: type[BaseModel]) -> dict:
+    """The schema in the request: Gemini config that asks for JSON in the shape of `model`."""
+    return {'response_mime_type': 'application/json', 'response_json_schema': model.model_json_schema()}
+
+[md 10]
+## Each answer and its check get their own column
+
+In Pixeltable, you declare tables as Python classes. In `photos`, the only columns you fill in are `name` and `photo`. The rest are computed columns, which run on every insert.
+
+[11] In [6]:
+!sed -n '6,22p' schema.py
+from listing import MODEL, PROMPT, PROMPT_WITH_SCHEMA, ListingDetails, json_config
+
+TableModel = pxt.model_base()
+
+
+class Photos(TableModel, name='photos'):
+    name = pxt.Column(type=pxt.String, primary_key=True)
+    photo: pxt.Image
+
+    # 1. The schema only in the prompt
+    prompt_only = pxtf.gemini.generate_content([PROMPT_WITH_SCHEMA, photo], model=MODEL)
+    prompt_only_text = prompt_only.candidates[0].content.parts[0].text.astype(pxt.String)
+    prompt_only_details = pxtf.json.loads(prompt_only_text).astype(pxt.Json[ListingDetails])
+
+    # 2. The schema in the request
+    response = pxtf.gemini.generate_content([PROMPT, photo], model=MODEL, config=json_config(ListingDetails))
+    details = response.parsed.astype(pxt.Json[ListingDetails])
+
+[md 12]
+`prompt_only` holds Gemini's whole answer to the first call, and `prompt_only_text` is its text. `prompt_only_details` parses that text with `json.loads`, then `astype(pxt.Json[ListingDetails])` checks its keys and types.
+
+`response` holds the answer to the second call, and `details` runs the same check on its `parsed` field. Gemini's SDK fills in `parsed` only when the request has a schema, which is why the first check parses the text.
+
+[md 13]
+`pxt schema diff` shows what's about to change. Then `pxt schema update` creates the table.
+
+[14] In [7]:
+!pxt schema diff schema.py llm_output_demo
++ llm_output_demo/photos   create
+
+Plan: 1 create, 0 update, 0 unchanged, 0 extra  |  0 destructive
+
+[15] In [8]:
+!pxt schema update schema.py llm_output_demo -f
+created   llm_output_demo/photos
+
+[md 16]
+## A failed check keeps the answer on its photo's row
+
+I'll insert five photos from the marketplace app. Each `photo` is a URL, and the insert downloads the photo, so Gemini gets the image.
+
+`on_error='ignore'` keeps a row whose check fails, along with its error. Without it, one failed check stops the whole insert, and no rows are saved.
+
+[17] In [9]:
+BASE = 'https://raw.githubusercontent.com/apreshill/pixeltable-marketplace/main/samples/'
+names = ['film-camera-1', 'cruiser-bike-1', 'guitar-1', 'backpack-1', 'salt-lamp-1']
+
+photos = pxt.get_table('llm_output_demo.photos')
+photos.insert([{'name': name, 'photo': f'{BASE}{name}.jpg'} for name in names], on_error='ignore')
+Inserted 5 rows with 5 errors across 1 column (photos.prompt_only_details) in 23.26 s (0.21 rows/s)
+5 rows inserted, 5 exceptions.
+
+[md 18]
+That's ten calls to Gemini, and five errors, all in `prompt_only_details`.
+
+[md 19]
+## With the schema only in the prompt, every answer failed `json.loads`
+
+`errortype` and `errormsg` hold each failure's exception, on the row of its photo.
+
+[20] In [10]:
+photos.where(photos.prompt_only_details.errortype != None).select(
+    photos.name, photos.photo, photos.prompt_only_details.errortype, photos.prompt_only_details.errormsg
+).collect()
+             name                                              photo  \
+0      backpack-1  <PIL.JpegImagePlugin.JpegImageFile image mode=...   
+1  cruiser-bike-1  <PIL.JpegImagePlugin.JpegImageFile image mode=...   
+2   film-camera-1  <PIL.JpegImagePlugin.JpegImageFile image mode=...   
+3        guitar-1  <PIL.JpegImagePlugin.JpegImageFile image mode=...   
+4     salt-lamp-1  <PIL.JpegImagePlugin.JpegImageFile image mode=...   
+
+  prompt_only_details_errortype               prompt_only_details_errormsg  
+0               JSONDecodeError  Expecting value: line 1 column 1 (char 0)  
+1               JSONDecodeError  Expecting value: line 1 column 1 (char 0)  
+2               JSONDecodeError  Expecting value: line 1 column 1 (char 0)  
+3               JSONDecodeError  Expecting value: line 1 column 1 (char 0)  
+4               JSONDecodeError  Expecting value: line 1 column 1 (char 0)  
+
+[md 21]
+All five fail at line 1, column 1, where `json.loads` expected the JSON to start. The error says where, and the raw answer says why.
+
+[22] In [11]:
+for row in photos.select(photos.name, photos.prompt_only_text).collect():
+    print(f"--- {row['name']}\n{row['prompt_only_text']}")
+--- backpack-1
+```json
+{
+  "title": "Brown Leather Backpack with Two Front Buckle Pockets",
+  "category": "bags",
+  "condition": "like new",
+  "color": "Brown",
+  "description": "This brown leather backpack features a main flap secured with a brass-toned metal buckle strap. It includes two exterior front pockets with matching flap and buckle closures, as well as a top carry handle. The material shows a smooth, mottled brown finish with neat tonal stitching.",
+  "pitch": "Check out this classic brown leather backpack featuring two front buckle pockets. It has a timeless look and clean finish.",
+  "properties": {}
+}
+```
+--- cruiser-bike-1
+```json
+{
+  "title": "Vintage Mint Green Cruiser Bicycle with Wicker Basket",
+  "category": "bikes",
+  "condition": "fair",
+  "color": "Mint Green",
+  "description": "This classic cruiser bicycle features a mint green frame with a matching front fender, a front wicker basket, and a brown leather saddle. Swept-back handlebars are equipped with brown hand grips, a hand brake, and a bell. Noticeable cosmetic wear includes chipped paint on the fender and rust on the wheel spokes.",
+  "pitch": "Ride in classic style with this vintage mint green cruiser bicycle. It includes a front wicker basket and a brown saddle."
+}
+```
+--- film-camera-1
+```json
+{
+  "title": "Vintage Style SLR Camera with Lens",
+  "category": "cameras",
+  "condition": "like new",
+  "color": "Silver and black",
+  "description": "This camera features a classic two-tone design with silver top and bottom plates alongside a textured black body. It is fitted with a central prime-style lens with intact glass and visible dial controls on the top plate. The body shows a clean finish with no visible scratches or dents.",
+  "pitch": "Check out this sleek vintage-style SLR camera in silver and black. It features a clean exterior and includes the front lens."
+}
+```
+--- guitar-1
+```json
+{
+  "title": "Natural Finish 6-String Acoustic Guitar",
+  "category": "instruments",
+  "condition": "good",
+  "color": "Natural",
+  "description": "This dreadnought acoustic guitar features a natural wood finish with cream binding and a black pickguard. It is strung with six strings and has a dark bridge mounted with a rectangular base plate. The neck shows a dark fretboard extending over the soundhole rosette.",
+  "pitch": "Check out this classic natural finish acoustic guitar. It has six strings and a timeless dreadnought design."
+}
+```
+--- salt-lamp-1
+```json
+{
+  "title": "Himalayan Salt Lamp with Wooden Base",
+  "category": "home",
+  "condition": "good",
+  "color": "Orange",
+  "description": "This carved Himalayan salt lamp emits a warm orange light from within. It features a naturally textured rock surface mounted on a dark circular base resting on a tabletop.",
+  "pitch": "Add a warm ambient glow to any space with this natural salt lamp. It lights up beautifully on a dark base.",
+  "description_schema": "What Gemini writes about a seller's photo."
+}
+```
+
+[md 23]
+Gemini wrapped every answer in a Markdown code fence, so the text starts with three backticks, not a brace. In this run, the JSON inside each fence would pass the check.
+
+[md 24]
+## With the schema in the request, every answer passed
+
+These are the same photos and the same Pydantic model. The only change is where the schema went. Here's the text of the guitar's answer this time.
+
+[25] In [12]:
+guitar = photos.where(photos.name == 'guitar-1')
+print(guitar.select(text=photos.response.candidates[0].content.parts[0].text).collect()[0]['text'])
+{
+  "title": "Natural Wood Acoustic Dreadnought Guitar",
+  "category": "instruments",
+  "condition": "good",
+  "color": "natural",
+  "description": "This acoustic guitar features a natural wood body paired with a black pickguard and a dark rosewood-style bridge. It comes strung with six steel strings extending over a fretboard with dot inlays. The top shows a clean finish with minimal cosmetic signs of use.",
+  "pitch": "Check out this classic natural finish acoustic guitar. It features a dreadnought body with steel strings ready to play."
+}
+
+[md 26]
+It starts with a brace, with no fence. Here are all five.
+
+[27] In [13]:
+photos.select(
+    photos.name, photos.photo, photos.details.category, photos.details.condition, photos.details.errortype
+).collect()
+             name                                              photo  \
+0      backpack-1  <PIL.JpegImagePlugin.JpegImageFile image mode=...   
+1  cruiser-bike-1  <PIL.JpegImagePlugin.JpegImageFile image mode=...   
+2   film-camera-1  <PIL.JpegImagePlugin.JpegImageFile image mode=...   
+3        guitar-1  <PIL.JpegImagePlugin.JpegImageFile image mode=...   
+4     salt-lamp-1  <PIL.JpegImagePlugin.JpegImageFile image mode=...   
+
+  details_category details_condition details_errortype  
+0             bags          like new              None  
+1            bikes              fair              None  
+2          cameras          like new              None  
+3      instruments              good              None  
+4             home              good              None  
+
+[md 28]
+No errors, and every `category` and `condition` is one of the allowed values.
+
+[md 29]
+## `pxt.Json[ListingDetails]` checks keys and types, not `Literal` values
+
+`pxt.Json[ListingDetails]` checks that every required key is there, with the right type. It doesn't check that a `Literal` field holds one of its values.
+
+Gemini's answers kept to the allowed values, so to show one that doesn't, I'll use a stand-in. This is the demo-only part: it passes the answer from `response` through, except on `desk-lamp-1`, where it changes `condition` to `'barely used'`.
+
+[30] In [14]:
+!sed -n '14,23p' udfs.py
+@pxt.udf
+def stand_in_model(name: str, answer: pxt.Json) -> pxt.Json:
+    """Demo only: Gemini's answer as it is, except on desk-lamp-1, where `condition` becomes 'barely used'.
+
+    In our runs, Gemini's answers kept to the Literal values. This stands in for an answer that doesn't,
+    so the notebook can show what each check does with one.
+    """
+    if name == 'desk-lamp-1':
+        return {**answer, 'condition': 'barely used'}
+    return answer
+
+[md 31]
+## A UDF with `model_validate` catches the `Literal` value
+
+A UDF is a Python function that a computed column can call. For Pydantic's full validation, `validate_listing` calls `ListingDetails.model_validate`.
+
+[32] In [15]:
+!sed -n '8,11p' udfs.py
+@pxt.udf
+def validate_listing(answer: pxt.Json) -> pxt.Json[ListingDetails]:
+    """Run Pydantic's own validation on the answer: required keys, types, and Literal values."""
+    return ListingDetails.model_validate(answer).model_dump()
+
+[md 33]
+`schema_validate.py` adds three columns: the stand-in's answer, and that answer checked both ways. The diff marks all three as safe.
+
+[34] In [16]:
+!diff schema.py schema_validate.py
+6a7
+> from udfs import stand_in_model, validate_listing
+22a24,28
+> 
+>     # 3. Demo only: the stand-in's answer, checked two ways
+>     stand_in_answer = stand_in_model(name, response.parsed)
+>     stand_in_details = stand_in_answer.astype(pxt.Json[ListingDetails])  # keys and types
+>     stand_in_validated = validate_listing(stand_in_answer)  # Pydantic's full validation
+
+[35] In [17]:
+!pxt schema diff schema_validate.py llm_output_demo
+~ llm_output_demo/photos   update
+    + column 'stand_in_answer' will be added  safe
+    + column 'stand_in_details' will be added  safe
+    + column 'stand_in_validated' will be added  safe
+
+Plan: 0 create, 1 update, 0 unchanged, 0 extra  |  0 destructive
+
+[36] In [18]:
+!pxt schema update schema_validate.py llm_output_demo -f
+updated   llm_output_demo/photos
+
+[md 37]
+The update computed the three columns for the five photos from the answers already stored. It didn't call Gemini again.
+
+Now I'll insert the desk lamp.
+
+[38] In [19]:
+photos = pxt.get_table('llm_output_demo.photos')  # reload after the schema change
+photos.insert([{'name': 'desk-lamp-1', 'photo': f'{BASE}desk-lamp-1.jpg'}], on_error='ignore')
+Inserted 1 row with 2 errors across 2 columns (photos.stand_in_validated, photos.prompt_only_details) in 13.88 s (0.07 rows/s)
+1 row inserted, 2 exceptions.
+
+[md 39]
+Two errors this time: `prompt_only_details` again, and `stand_in_validated`.
+
+[40] In [20]:
+photos.select(
+    photos.name,
+    condition=photos.stand_in_details.condition,
+    details_error=photos.stand_in_details.errortype,
+    validated_error=photos.stand_in_validated.errortype,
+).collect()
+             name    condition details_error  validated_error
+0      backpack-1     like new          None              NaN
+1  cruiser-bike-1         fair          None              NaN
+2     desk-lamp-1  barely used          None  ValidationError
+3   film-camera-1     like new          None              NaN
+4        guitar-1         good          None              NaN
+5     salt-lamp-1         good          None              NaN
+
+[md 41]
+`'barely used'` got through `stand_in_details` with no error. `stand_in_validated` caught it, and its error is Pydantic's own message.
+
+[42] In [21]:
+for row in photos.where(photos.stand_in_validated.errortype != None).select(
+    photos.name, photos.stand_in_validated.errormsg
+).collect():
+    print(f"--- {row['name']}\n{row['stand_in_validated_errormsg']}")
+--- desk-lamp-1
+1 validation error for ListingDetails
+condition
+  Input should be 'new', 'like new', 'good' or 'fair' [type=literal_error, input_value='barely used', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+
+[md 43]
+In your own table, when your code depends on a `Literal` value, check `response.parsed` with `validate_listing` instead of `astype`.
+
+[md 44]
+## Each failed answer sat next to its error
+
+We asked Gemini about the same photos two ways. With the schema only in the prompt, every answer came back in a Markdown fence and failed `json.loads`. With the schema in the request, every answer passed.
+
+Then the `astype` check let a `Literal` value through, and a UDF with `model_validate` caught it.
+
+Pixeltable doesn't make an LLM return valid output. What you get is each answer in a column next to its check, on its photo's row, so you can see what came back and why it failed.
+
+The notebook and schema files are in the `check-llm-output` folder of the repo linked below. If this was useful, please consider starring the Pixeltable GitHub repo. Stars help other developers find it.
+

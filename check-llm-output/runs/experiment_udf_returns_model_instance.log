@@ -1,0 +1,161 @@
+# First version of experiment_what_the_check_covers.py: exp_udfs.validate_listing was annotated '-> ListingDetails' and returned
+# ListingDetails.model_validate(answer), the model instance. Line 26 is t.insert([...], on_error='ignore').
+# (The first attempt in this log also shows that a UDF can't be defined in the script's own namespace.)
+# pixeltable 0.7.25
+$ python exp2.py
+Traceback (most recent call last):
+  File "<scratchpad>/exp/exp2.py", line 19, in <module>
+    @pxt.udf
+     ^^^^^^^
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/pixeltable/func/udf.py", line 59, in udf
+    return make_function(decorated_fn=args[0], from_decorator=True)
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/pixeltable/func/udf.py", line 161, in make_function
+    raise excs.RequestError(
+    ...<4 lines>...
+    )
+pixeltable.exceptions.RequestError: Defining the UDF 'validate_listing' directly in the global namespace of a Python script
+is not allowed. To fix this error, move the UDF 'validate_listing' into a named module
+(a .py file other than your script), then import that module into your script.
+[exit 1]
+
+# pixeltable 0.7.25
+$ python exp2.py
+Connected to Pixeltable database at: postgresql+psycopg://postgres:***@/pixeltable?host=%2Fvar%2Ffolders%2Fzz%2Fd4wytf2s44996j3sr4zgthw80000gn%2FT%2Fafaf483fa3
+Created directory 'exp2'.
+Created table 't'.
+Added 0 column values with 0 errors in 0.00 s
+Added 0 column values with 0 errors in 0.00 s
+Traceback (most recent call last):
+  File "<scratchpad>/exp/exp2.py", line 26, in <module>
+    print(t.insert([{'case': k, 'answer': v} for k, v in CASES.items()], on_error='ignore'))
+          ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/pixeltable/telemetry.py", line 412, in wrapper
+    return fn(*args, **kwargs)
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/pixeltable/catalog/insertable_table.py", line 146, in insert
+    status = self._insert_table_data_source(
+        data_source=data_source,
+    ...<3 lines>...
+        skip_existing_keys=if_exists == 'ignore',
+    )
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/pixeltable/catalog/insertable_table.py", line 182, in _insert_table_data_source
+    status = self._tbl_version.get().insert(
+        source=data_source.rows() if query is None else None,
+    ...<4 lines>...
+        skip_existing_keys=skip_existing_keys,
+    )
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/pixeltable/catalog/table_version.py", line 1340, in insert
+    result = self._insert(
+        plan,
+    ...<5 lines>...
+        skip_existing_keys=skip_existing_keys,
+    )
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/pixeltable/catalog/table_version.py", line 1367, in _insert
+    cols_with_excs, row_counts, rows = self.store_tbl.insert_rows(
+                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        exec_plan,
+        ^^^^^^^^^^
+    ...<3 lines>...
+        skip_existing_keys=skip_existing_keys,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/pixeltable/telemetry.py", line 412, in wrapper
+    return fn(*args, **kwargs)
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/pixeltable/store.py", line 586, in insert_rows
+    stored_rows = self.sql_insert(
+        self.sa_tbl, store_col_names, table_rows, skip_existing_keys=on_conflict_skip
+    )
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/pixeltable/store.py", line 627, in sql_insert
+    conn.execute(sql.insert(sa_tbl), params)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1494, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py", line 534, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1714, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<9 lines>...
+        param_dict=param_dict,
+    )
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1868, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1996, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 2354, in _handle_dbapi_exception
+    raise exc_info[1].with_traceback(exc_info[2])
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1946, in _exec_single_context
+    self.dialect.do_executemany(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor,
+        ^^^^^^^
+    ...<2 lines>...
+        context,
+        ^^^^^^^^
+    )
+    ^
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 1189, in do_executemany
+    cursor.executemany(statement, parameters)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/psycopg/cursor.py", line 138, in executemany
+    self._conn.wait(
+    ~~~~~~~~~~~~~~~^
+        self._executemany_gen_pipeline(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            query, params_seq, returning
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        )
+        ^
+    )
+    ^
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/psycopg/connection.py", line 495, in wait
+    return waiting.wait(
+           ~~~~~~~~~~~~^
+        gen, self.pgconn.socket, interval=interval, timeout=timeout
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "psycopg_binary/_psycopg/waiting.pyx", line 360, in psycopg_binary._psycopg.wait_c
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/psycopg/_cursor_base.py", line 236, in _executemany_gen_pipeline
+    pgq.dump(params)
+    ~~~~~~~~^^^^^^^^
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/psycopg/_queries.py", line 103, in dump
+    self.params = self._tx.dump_sequence(params, self._want_formats)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "psycopg_binary/_psycopg/transform.pyx", line 355, in psycopg_binary._psycopg.Transformer.dump_sequence
+  File "psycopg_binary/_psycopg/transform.pyx", line 407, in psycopg_binary._psycopg.Transformer.dump_sequence
+  File "<scratchpad>/exp/.venv/lib/python3.13/site-packages/psycopg/types/json.py", line 218, in dump
+    if isinstance((data := dumps(obj)), str):
+                           ~~~~~^^^^^
+  File "~/.local/share/uv/python/cpython-3.13.7-macos-aarch64-none/lib/python3.13/json/__init__.py", line 231, in dumps
+    return _default_encoder.encode(obj)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "~/.local/share/uv/python/cpython-3.13.7-macos-aarch64-none/lib/python3.13/json/encoder.py", line 200, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+  File "~/.local/share/uv/python/cpython-3.13.7-macos-aarch64-none/lib/python3.13/json/encoder.py", line 261, in iterencode
+    return _iterencode(o, 0)
+  File "~/.local/share/uv/python/cpython-3.13.7-macos-aarch64-none/lib/python3.13/json/encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+                    f'is not JSON serializable')
+TypeError: Object of type ListingDetails is not JSON serializable
+[exit 1]
+

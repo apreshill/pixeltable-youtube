@@ -1,0 +1,25 @@
+[project]
+name = "media-to-llm"
+version = "0.1.0"
+description = "Send product photos and videos to Gemini by passing a Pixeltable column into the call: no bytes read and no media type stated by hand."
+requires-python = ">=3.11"
+dependencies = [
+    "google-genai>=2.34.0",
+    "pixeltable>=0.7.25",
+    "pydantic-ai-slim[google]>=2.71.0",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.4.0",
+    "ipywidgets>=8.1.9",
+    "jupyterlab>=4.6.6",
+]
+
+[[tool.pixeltable.database]]
+# The local database. vars.<name> sets the value of the ConfigVar called <name>, for example:
+# vars.media_dest = 's3://bucket/prefix'
+# A hosted database gets a second entry, with name = 'pxt://org:db'.

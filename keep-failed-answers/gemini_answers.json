@@ -1,0 +1,68 @@
+{
+  "desk-lamp-1": {
+    "md5": "99fa4c0f9054e3df11fa60480c0165b5",
+    "answer": {
+      "title": "Black Adjustable LED Desk Lamp",
+      "category": "home",
+      "condition": "like new",
+      "color": "black",
+      "description": "This black desk lamp features an adjustable articulated arm and a solid round base. It has an elongated lamp head emitting a bright white light and includes an attached power cable.",
+      "pitch": "Brighten your workspace with this sleek black adjustable desk lamp. It delivers flexible positioning and bright, focused illumination."
+    }
+  },
+  "film-camera-1": {
+    "md5": "ec1a088b51d93ebd9def28687503ddd4",
+    "answer": {
+      "title": "Vintage Style SLR Film Camera in Silver and Black",
+      "category": "cameras",
+      "condition": "good",
+      "color": "Silver",
+      "description": "This manual SLR camera features a silver chrome top and base paired with a black textured body wrap. It is fitted with a central lens showing clear glass, along with top-mounted control dials and a prism viewfinder. The exterior is well-maintained with clean edges and minimal surface wear visible.",
+      "pitch": "Take a look at this classic silver and black SLR camera. It features a clean body with all original dials intact."
+    }
+  },
+  "guitar-1": {
+    "md5": "af76fa9d45739852e52c09d056229be7",
+    "answer": {
+      "title": "6-String Acoustic Guitar with Natural Finish",
+      "category": "instruments",
+      "condition": "good",
+      "color": "Natural",
+      "description": "This acoustic guitar features a natural wood finish soundboard accented by a black pickguard and a soundhole rosette. It is fully strung with six strings running over a dark fretboard and bridge. The body displays a traditional dreadnought shape in clean cosmetic condition.",
+      "pitch": "Check out this acoustic guitar featuring a natural wood finish. It is strung with six strings and ready to play."
+    }
+  },
+  "backpack-1": {
+    "md5": "46e1b92b053a8f05e4fe40ce92ebcc5a",
+    "answer": {
+      "title": "Brown Leather Flap Backpack with Front Pockets",
+      "category": "bags",
+      "condition": "like new",
+      "color": "Brown",
+      "description": "This brown leather backpack features a rounded top flap secured by a brass-tone buckle and a sturdy top carry handle. Two matching flap pockets with buckle straps sit on the lower front. The exterior shows neat perimeter stitching with a subtle mottled finish.",
+      "pitch": "Carry your essentials in classic style with this handsome brown backpack. It features twin front pockets and secure buckle closures."
+    }
+  },
+  "cruiser-bike-1": {
+    "md5": "140229247098884013c07c580fdae997",
+    "answer": {
+      "title": "Vintage Mint Green Cruiser Bike with Wicker Basket",
+      "category": "bikes",
+      "condition": "fair",
+      "color": "Mint green",
+      "description": "This cruiser bike features a mint green front fender and frame paired with a front wicker basket and a brown saddle. The chrome handlebars include brown grips, a black bell, and a right-hand brake lever. Noticeable cosmetic wear, chipped paint, and rust are visible on the fender and wheel spokes.",
+      "pitch": "Ride in classic style with this vintage green cruiser featuring a front wicker basket. Check it out and make an offer today!"
+    }
+  },
+  "salt-lamp-1": {
+    "md5": "6745f477459af7ab3278e1c48a6ae9bd",
+    "answer": {
+      "title": "Himalayan Salt Rock Lamp on Wooden Base",
+      "category": "home",
+      "condition": "good",
+      "color": "Orange",
+      "description": "This natural salt rock lamp is carved with an organic texture and mounted on a dark wooden base. When turned on, the internal light casts a soft, warm orange glow. A power cord extends from the back of the base.",
+      "pitch": "Bring a cozy atmosphere to your space with this Himalayan salt lamp. It lights up with a warm amber tone."
+    }
+  }
+}

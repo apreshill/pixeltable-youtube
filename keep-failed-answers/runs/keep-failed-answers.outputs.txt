@@ -1,0 +1,228 @@
+# pixeltable 0.7.25, 2026-11-23, sandbox Pixeltable home; the notebook executed top to bottom with nbconvert (stand-in, no API calls)
+In [1]:
+!uv sync
+Out:
+[2mResolved [1m159 packages[0m [2min 3ms[0m[0m
+[2mAudited [1m149 packages[0m [2min 2ms[0m[0m
+
+In [2]:
+import pixeltable as pxt
+from pydantic import ValidationError
+
+import stand_in
+from schema import ListingDetails
+
+# Start fresh: drop the tables from any earlier run.
+pxt.drop_dir('answers_demo', force=True, if_not_exists='ignore')
+Out:
+Creating a Pixeltable instance at: <scratchpad>/kfa-nb5/.pxt-home
+Connected to Pixeltable database at: postgresql+psycopg://postgres:***@/pixeltable?host=%2Fvar%2Ffolders%2Fzz%2Fd4wytf2s44996j3sr4zgthw80000gn%2FT%2F91e13a7abb
+
+In [3]:
+!sed -n '14,22p' schema.py
+Out:
+class ListingDetails(BaseModel):
+    """What the LLM writes from a seller's photo."""
+
+    title: str = Field(description='A listing title, under 60 characters')
+    category: Literal['cameras', 'bikes', 'home', 'bags', 'instruments', 'other']
+    condition: Literal['new', 'like new', 'good', 'fair']
+    color: str
+    description: str = Field(description='Two or three sentences for buyers, about only what the photos show')
+    pitch: str = Field(description='Narration for a 10-second listing video: two short spoken sentences, 15 to 25 words')
+
+In [4]:
+answer = dict(stand_in.ANSWERS['film-camera-1']['answer'], color=['Silver', 'Black'])  # a list, not a string
+answer
+Out:
+{'title': 'Vintage Style SLR Film Camera in Silver and Black',
+ 'category': 'cameras',
+ 'condition': 'good',
+ 'color': ['Silver', 'Black'],
+ 'description': 'This manual SLR camera features a silver chrome top and base paired with a black textured body wrap. It is fitted with a central lens showing clear glass, along with top-mounted control dials and a prism viewfinder. The exterior is well-maintained with clean edges and minimal surface wear visible.',
+ 'pitch': 'Take a look at this classic silver and black SLR camera. It features a clean body with all original dials intact.'}
+
+In [5]:
+details = None
+try:
+    details = ListingDetails.model_validate(answer)
+except ValidationError as e:
+    print(e)
+print(details)
+Out:
+1 validation error for ListingDetails
+color
+  Input should be a valid string [type=string_type, input_value=['Silver', 'Black'], input_type=list]
+    For further information visit https://errors.pydantic.dev/2.14/v/string_type
+None
+
+In [6]:
+!sed -n '10,12p;25,40p' schema.py
+Out:
+MODEL = 'gemini-3.8-flash'
+DETAILS_PROMPT = 'Write a marketplace listing for the item in these photos. Describe only what the photos show.'
+
+def json_config(model: type[BaseModel]) -> dict:
+    """Gemini config that asks for JSON in the shape of `model`."""
+    return {'response_mime_type': 'application/json', 'response_json_schema': model.model_json_schema()}
+
+
+TableModel = pxt.model_base()
+
+
+class Listings(TableModel, name='listings'):
+    name: pxt.String
+    photo: pxt.Image
+
+    # The LLM's whole answer, as it came back. The stand-in is demo only.
+    response = stand_in_gemini([DETAILS_PROMPT, photo], model=MODEL, config=json_config(ListingDetails))
+    # The answer checked against ListingDetails. A missing field or a wrong type is an error on this row.
+    details = response.parsed.astype(pxt.Json[ListingDetails])
+
+In [7]:
+!sed -n '25,41p' stand_in.py
+Out:
+BROKEN = ['film-camera-1', 'guitar-1']  # the stand-in breaks the answers for these photos
+CALLS: list[str] = []  # every photo the stand-in was called for, in order
+
+
+@pxt.udf
+def stand_in_gemini(contents: pxt.Json, *, model: str, config: dict | None = None) -> dict:
+    """Takes the same arguments as pxtf.gemini.generate_content, and returns Gemini's answer as `parsed`."""
+    prompt, photo = contents
+    name = photo_name(photo)
+    CALLS.append(name)
+    answer = dict(ANSWERS[name]['answer'])
+    if name in BROKEN:
+        if name == 'film-camera-1':
+            answer['color'] = ['Silver', 'Black']  # a list, not a string
+        if name == 'guitar-1':
+            del answer['condition']  # a required field, left out
+    return {'parsed': answer}
+
+In [8]:
+!pxt schema diff schema.py answers_demo
+Out:
++ answers_demo/listings    create
+
+Plan: 1 create, 0 update, 0 unchanged, 0 extra  |  0 destructive
+
+In [9]:
+!pxt schema update schema.py answers_demo -f
+Out:
+created   answers_demo/listings
+
+In [10]:
+BASE = 'https://raw.githubusercontent.com/apreshill/pixeltable-marketplace/main/samples/'
+NAMES = ['desk-lamp-1', 'film-camera-1', 'guitar-1', 'backpack-1', 'cruiser-bike-1', 'salt-lamp-1']
+rows = [{'name': name, 'photo': f'{BASE}{name}.jpg'} for name in NAMES]
+
+listings = pxt.get_table('answers_demo.listings')
+try:
+    listings.insert(rows)
+except pxt.Error as e:
+    print(str(e).splitlines()[1])  # the error, without the long expression around it
+listings.count()
+Out:
+Expected string, got list
+0
+
+In [11]:
+listings.insert(rows, on_error='ignore')
+Out:
+Inserted 6 rows with 2 errors across 1 column (listings.details) in 0.04 s (139.55 rows/s)
+6 rows inserted, 2 exceptions.
+
+In [12]:
+listings.select(listings.photo, listings.name, listings.details.errortype, listings.details.errormsg).collect()
+Out:
+                                               photo            name  \
+0  <PIL.JpegImagePlugin.JpegImageFile image mode=...   film-camera-1   
+1  <PIL.JpegImagePlugin.JpegImageFile image mode=...        guitar-1   
+2  <PIL.JpegImagePlugin.JpegImageFile image mode=...     desk-lamp-1   
+3  <PIL.JpegImagePlugin.JpegImageFile image mode=...      backpack-1   
+4  <PIL.JpegImagePlugin.JpegImageFile image mode=...  cruiser-bike-1   
+5  <PIL.JpegImagePlugin.JpegImageFile image mode=...     salt-lamp-1   
+
+  details_errortype                   details_errormsg  
+0         TypeError          Expected string, got list  
+1         TypeError  Missing required key: 'condition'  
+2               NaN                                NaN  
+3               NaN                                NaN  
+4               NaN                                NaN  
+5               NaN                                NaN
+
+In [13]:
+failed = listings.details.errortype != None
+listings.where(failed).select(
+    listings.name,
+    listings.response.parsed.title,
+    listings.response.parsed.condition,
+    listings.response.parsed.color,
+    listings.details,
+).collect()
+Out:
+            name                              response_parsed_title  \
+0  film-camera-1  Vintage Style SLR Film Camera in Silver and Black   
+1       guitar-1       6-String Acoustic Guitar with Natural Finish   
+
+  response_parsed_condition response_parsed_color details  
+0                      good       [Silver, Black]    None  
+1                       NaN               Natural    None
+
+In [14]:
+stand_in.CALLS.clear()
+listings.recompute_columns(listings.details, errors_only=True).num_rows
+Out:
+2
+
+In [15]:
+stand_in.CALLS, listings.where(failed).count()
+Out:
+([], 2)
+
+In [16]:
+stand_in.BROKEN.clear()  # demo only: the stand-in stops breaking answers
+listings.recompute_columns(listings.response, where=failed).num_rows
+Out:
+2
+
+In [17]:
+stand_in.CALLS
+Out:
+['film-camera-1', 'guitar-1']
+
+In [18]:
+listings.select(listings.photo, listings.name, listings.details.condition, listings.details.color, listings.details.errortype).collect()
+Out:
+                                               photo            name  \
+0  <PIL.JpegImagePlugin.JpegImageFile image mode=...     desk-lamp-1   
+1  <PIL.JpegImagePlugin.JpegImageFile image mode=...      backpack-1   
+2  <PIL.JpegImagePlugin.JpegImageFile image mode=...  cruiser-bike-1   
+3  <PIL.JpegImagePlugin.JpegImageFile image mode=...     salt-lamp-1   
+4  <PIL.JpegImagePlugin.JpegImageFile image mode=...   film-camera-1   
+5  <PIL.JpegImagePlugin.JpegImageFile image mode=...        guitar-1   
+
+  details_condition details_color details_errortype  
+0          like new         black              None  
+1          like new         Brown              None  
+2              fair    Mint green              None  
+3              good        Orange              None  
+4              good        Silver              None  
+5              good       Natural              None
+
+In [19]:
+!diff schema.py schema_gemini.py
+Out:
+5a6
+> import pixeltable.functions as pxtf
+8,9d8
+< from stand_in import stand_in_gemini
+< 
+37,38c36,37
+<     # The LLM's whole answer, as it came back. The stand-in is demo only.
+<     response = stand_in_gemini([DETAILS_PROMPT, photo], model=MODEL, config=json_config(ListingDetails))
+---
+>     # The LLM's whole answer, as it came back.
+>     response = pxtf.gemini.generate_content([DETAILS_PROMPT, photo], model=MODEL, config=json_config(ListingDetails))
+

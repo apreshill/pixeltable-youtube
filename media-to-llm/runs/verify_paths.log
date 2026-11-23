@@ -1,0 +1,20 @@
+# pixeltable 0.7.25
+$ bash -c cd ~/Documents/Github/pixeltable-youtube/media-to-llm && uv run python runs/verify_paths.py
+created   media_verify/photos
+created   media_verify/videos
+inline limit for a video, in bytes: 3145728
+Connected to Pixeltable database at: postgresql+psycopg://postgres:***@/pixeltable?host=%2Fvar%2Ffolders%2Fzz%2Fd4wytf2s44996j3sr4zgthw80000gn%2FT%2F4cf6618775
+generate_content contents: ["text 'Describe the item in this photo in one sentence, for a secondhand listing.'", 'PIL image JPEG (1024, 1024) (Pixeltable loaded it from file_cache/)']
+google-genai SDK pil_to_blob: image/jpeg, 136060 bytes
+Inserted 1 row with 0 errors in 5.22 s (0.19 rows/s)
+generate_content contents: ["text 'Describe what happens in this video in one sentence.'", 'inline_data video/mp4, 2979164 base64 chars']
+generate_content contents: ["text 'Describe what happens in this video in one sentence.'", "Files API upload placeholder {'task_id': 0, 'mime_type': 'video/mp4'}"]
+uploaded a 6.1 MiB video to the Files API as files/177o2u3gyfb2
+deleted files/177o2u3gyfb2 from the Files API
+Inserted 2 rows with 0 errors in 14.94 s (0.13 rows/s)
+files/177o2u3gyfb2 after the call: ClientError 403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'You do not have permission to access the File 177o2u3gyfb2 or it may not exist.', 'status': 'PERMISSION_DENIED'}}
+desk-lamp-1.jpg: 134820 bytes, input 1105 [('IMAGE', 1089), ('TEXT', 16)], output incl. thinking 332, $0.00207
+bangkok.mp4: 6406129 bytes, input 1199 [('TEXT', 11), ('VIDEO', 1188)], output incl. thinking 176, $0.00156
+bangkok_half_res.mp4: 2234371 bytes, input 1199 [('TEXT', 11), ('VIDEO', 1188)], output incl. thinking 110, $0.00131
+[exit 0]
+

@@ -1,0 +1,11 @@
+2026-11-23 15:29:19,601 Starting new HTTPS connection (1): logfire-us.pydantic.dev:443
+2026-11-23 15:29:19,703 Starting new HTTPS connection (1): logfire-us.pydantic.dev:443
+2026-11-23 15:29:19,815 https://logfire-us.pydantic.dev:443 "GET /v1/info HTTP/1.1" 200 None
+2026-11-23 15:29:19,958 https://logfire-us.pydantic.dev:443 "POST /v1/traces HTTP/1.1" 200 0
+2026-11-23 15:29:20,568 https://logfire-us.pydantic.dev:443 "POST /v1/traces HTTP/1.1" 200 0
+2026-11-23 15:29:27,249 https://logfire-us.pydantic.dev:443 "POST /v1/traces HTTP/1.1" 200 0
+2026-11-23 15:29:27,857 https://logfire-us.pydantic.dev:443 "POST /v1/traces HTTP/1.1" 200 0
+2026-11-23 15:29:37,497 Starting new HTTPS connection (1): logfire-us.pydantic.dev:443
+2026-11-23 15:29:37,657 https://logfire-us.pydantic.dev:443 "POST /v1/metrics HTTP/1.1" 200 2
+2026-11-23 15:29:37,660 Starting new HTTPS connection (1): logfire-us.pydantic.dev:443
+2026-11-23 15:29:37,837 https://logfire-us.pydantic.dev:443 "POST /v1/traces HTTP/1.1" 200 0

@@ -1,0 +1,162 @@
+# pixeltable 0.7.25
+$ python experiment_prompt_vs_schema.py
+Creating a Pixeltable instance at: <scratchpad>/exp/.pxt-home
+Connected to Pixeltable database at: postgresql+psycopg://postgres:***@/pixeltable?host=%2Fvar%2Ffolders%2Fzz%2Fd4wytf2s44996j3sr4zgthw80000gn%2FT%2Fafaf483fa3
+Created directory 'exp'.
+Created table 'photos'.
+Added 0 column values with 0 errors in 0.00 s
+Added 0 column values with 0 errors in 0.00 s
+Inserted 6 rows with 0 errors in 21.01 s (0.29 rows/s)
+UpdateStatus(updated_cols=[], cols_with_excs=[], rows=None, row_count_stats=RowCountStats(inserted_rows=6, deleted_rows=0, updated_rows=0, num_excs=0, skipped_rows=0), cascade_row_count_stats=RowCountStats(inserted_rows=0, deleted_rows=0, updated_rows=0, num_excs=0, skipped_rows=0))
+============================== salt-lamp-1
+--- prompt_only parsed: None
+--- prompt_only text:
+```json
+{
+  "title": "Himalayan Salt Rock Lamp with Wooden Base",
+  "category": "home",
+  "condition": "good",
+  "color": "Orange",
+  "description": "This natural carved salt crystal lamp emits a warm orange and amber light. It is mounted on a dark, circular wooden base with an electrical cord extending from behind.",
+  "pitch": "Brighten your space with this glowing natural salt lamp. It sits securely on a dark wooden base.",
+  "properties": {}
+}
+```
+--- prompt_only parts count: 1
+--- with_schema parsed: {'color': 'Orange', 'pitch': 'Brighten your space with this glowing Himalayan salt lamp. It features a natural rough texture and a warm ambient light.', 'title': 'Himalayan Salt Lamp with Base', 'category': 'home', 'condition': 'good', 'description': 'This carved salt lamp is pictured turned on and emitting a warm orange light. It is mounted on a circular dark base and includes an attached power cable.'}
+--- with_schema text:
+{
+  "title": "Himalayan Salt Lamp with Base",
+  "category": "home",
+  "condition": "good",
+  "color": "Orange",
+  "description": "This carved salt lamp is pictured turned on and emitting a warm orange light. It is mounted on a circular dark base and includes an attached power cable.",
+  "pitch": "Brighten your space with this glowing Himalayan salt lamp. It features a natural rough texture and a warm ambient light."
+}
+--- usage prompt_only: {'traffic_type': None, 'total_token_count': 1934, 'prompt_token_count': 1357, 'cache_tokens_details': None, 'thoughts_token_count': 459, 'prompt_tokens_details': [{'modality': 'TEXT', 'token_count': 268}, {'modality': 'IMAGE', 'token_count': 1089}], 'candidates_token_count': 118, 'candidates_tokens_details': None, 'cached_content_token_count': None, 'tool_use_prompt_token_count': None, 'tool_use_prompt_tokens_details': None}
+--- usage with_schema: {'traffic_type': None, 'total_token_count': 1807, 'prompt_token_count': 1108, 'cache_tokens_details': None, 'thoughts_token_count': 593, 'prompt_tokens_details': [{'modality': 'IMAGE', 'token_count': 1089}, {'modality': 'TEXT', 'token_count': 19}], 'candidates_token_count': 106, 'candidates_tokens_details': None, 'cached_content_token_count': None, 'tool_use_prompt_token_count': None, 'tool_use_prompt_tokens_details': None}
+============================== backpack-1
+--- prompt_only parsed: None
+--- prompt_only text:
+```json
+{
+  "title": "Brown Leather Backpack with Front Buckle Pockets",
+  "category": "bags",
+  "condition": "like new",
+  "color": "Brown",
+  "description": "This brown leather backpack features a main fold-over flap with a gold-tone buckle closure. Two exterior front pockets also fasten with matching buckle straps, and a top carrying handle is attached at the peak.",
+  "pitch": "Check out this classic brown leather backpack featuring two convenient front buckle pockets. It offers timeless style and practical storage for everyday use."
+}
+```
+--- prompt_only parts count: 1
+--- with_schema parsed: {'color': 'Brown', 'pitch': 'Upgrade your everyday style with this handsome brown leather backpack. It offers classic buckle closures and convenient exterior storage pockets.', 'title': 'Classic Brown Leather Backpack with Front Buckle Pockets', 'category': 'bags', 'condition': 'like new', 'description': 'This brown leather backpack features a large top flap secured with a metal buckle strap. Two front flap pockets with matching buckles provide additional exterior storage. It is finished with clean tonal stitching and a sturdy top carry handle.'}
+--- with_schema text:
+{"title":"Classic Brown Leather Backpack with Front Buckle Pockets","category":"bags","condition":"like new","color":"Brown","description":"This brown leather backpack features a large top flap secured with a metal buckle strap. Two front flap pockets with matching buckles provide additional exterior storage. It is finished with clean tonal stitching and a sturdy top carry handle.","pitch":"Upgrade your everyday style with this handsome brown leather backpack. It offers classic buckle closures and convenient exterior storage pockets."}
+--- usage prompt_only: {'traffic_type': None, 'total_token_count': 2161, 'prompt_token_count': 1357, 'cache_tokens_details': None, 'thoughts_token_count': 677, 'prompt_tokens_details': [{'modality': 'TEXT', 'token_count': 268}, {'modality': 'IMAGE', 'token_count': 1089}], 'candidates_token_count': 127, 'candidates_tokens_details': None, 'cached_content_token_count': None, 'tool_use_prompt_token_count': None, 'tool_use_prompt_tokens_details': None}
+--- usage with_schema: {'traffic_type': None, 'total_token_count': 1661, 'prompt_token_count': 1108, 'cache_tokens_details': None, 'thoughts_token_count': 456, 'prompt_tokens_details': [{'modality': 'IMAGE', 'token_count': 1089}, {'modality': 'TEXT', 'token_count': 19}], 'candidates_token_count': 97, 'candidates_tokens_details': None, 'cached_content_token_count': None, 'tool_use_prompt_token_count': None, 'tool_use_prompt_tokens_details': None}
+============================== guitar-1
+--- prompt_only parsed: None
+--- prompt_only text:
+```json
+{
+  "title": "Natural Finish 6-String Acoustic Dreadnought Guitar",
+  "category": "instruments",
+  "condition": "good",
+  "color": "Natural",
+  "description": "This dreadnought acoustic guitar features a natural wood body with perimeter binding and a black pickguard. It is strung with six strings over a dark bridge and rosette-accented soundhole. The fretboard includes circular position marker inlays.",
+  "pitch": "Check out this classic natural dreadnought acoustic guitar. It features a timeless look and comes fully strung ready to play.",
+}
+```
+--- prompt_only parts count: 1
+--- with_schema parsed: {'color': 'Natural', 'pitch': 'Check out this classic acoustic guitar with a natural gloss finish. It features a dreadnought body ready for your next session.', 'title': 'Natural Wood Acoustic Dreadnought Guitar', 'category': 'instruments', 'condition': 'good', 'description': 'This dreadnought acoustic guitar features a natural-finish spruce-style soundboard with cream edge binding. It is fitted with a black pickguard, concentric ring rosette, and six strings strung across an adjustable wooden bridge. The frets and body show light, standard signs of handling.'}
+--- with_schema text:
+{
+  "title": "Natural Wood Acoustic Dreadnought Guitar",
+  "category": "instruments",
+  "condition": "good",
+  "color": "Natural",
+  "description": "This dreadnought acoustic guitar features a natural-finish spruce-style soundboard with cream edge binding. It is fitted with a black pickguard, concentric ring rosette, and six strings strung across an adjustable wooden bridge. The frets and body show light, standard signs of handling.",
+  "pitch": "Check out this classic acoustic guitar with a natural gloss finish. It features a dreadnought body ready for your next session."
+}
+--- usage prompt_only: {'traffic_type': None, 'total_token_count': 2104, 'prompt_token_count': 1357, 'cache_tokens_details': None, 'thoughts_token_count': 613, 'prompt_tokens_details': [{'modality': 'TEXT', 'token_count': 268}, {'modality': 'IMAGE', 'token_count': 1089}], 'candidates_token_count': 134, 'candidates_tokens_details': None, 'cached_content_token_count': None, 'tool_use_prompt_token_count': None, 'tool_use_prompt_tokens_details': None}
+--- usage with_schema: {'traffic_type': None, 'total_token_count': 1810, 'prompt_token_count': 1108, 'cache_tokens_details': None, 'thoughts_token_count': 567, 'prompt_tokens_details': [{'modality': 'TEXT', 'token_count': 19}, {'modality': 'IMAGE', 'token_count': 1089}], 'candidates_token_count': 135, 'candidates_tokens_details': None, 'cached_content_token_count': None, 'tool_use_prompt_token_count': None, 'tool_use_prompt_tokens_details': None}
+============================== desk-lamp-1
+--- prompt_only parsed: None
+--- prompt_only text:
+```json
+{
+  "title": "Black Adjustable LED Desk Lamp",
+  "category": "home",
+  "condition": "like new",
+  "color": "Black",
+  "description": "This black desk lamp features an articulated adjustable arm and a circular base. The elongated LED light head is illuminated and in working order. It connects via an attached black power cord.",
+  "pitch": "Brighten your workspace with this sleek black adjustable desk lamp. It features flexible positioning and clean, modern illumination."
+}
+```
+--- prompt_only parts count: 1
+--- with_schema parsed: {'color': 'Black', 'pitch': 'Brighten your workspace with this sleek black adjustable LED desk lamp. It offers flexible positioning for all your study or work needs.', 'title': 'Black Adjustable LED Desk Lamp', 'category': 'home', 'condition': 'like new', 'description': 'This black desk lamp features an articulated swing arm mounted on a circular base. It includes a horizontal LED light bar shown illuminated. The unit is wired with a black power cord and shows no visible wear.'}
+--- with_schema text:
+{"title":"Black Adjustable LED Desk Lamp","category":"home","condition":"like new","color":"Black","description":"This black desk lamp features an articulated swing arm mounted on a circular base. It includes a horizontal LED light bar shown illuminated. The unit is wired with a black power cord and shows no visible wear.","pitch":"Brighten your workspace with this sleek black adjustable LED desk lamp. It offers flexible positioning for all your study or work needs."}
+--- usage prompt_only: {'traffic_type': None, 'total_token_count': 1978, 'prompt_token_count': 1357, 'cache_tokens_details': None, 'thoughts_token_count': 507, 'prompt_tokens_details': [{'modality': 'TEXT', 'token_count': 268}, {'modality': 'IMAGE', 'token_count': 1089}], 'candidates_token_count': 114, 'candidates_tokens_details': None, 'cached_content_token_count': None, 'tool_use_prompt_token_count': None, 'tool_use_prompt_tokens_details': None}
+--- usage with_schema: {'traffic_type': None, 'total_token_count': 1711, 'prompt_token_count': 1108, 'cache_tokens_details': None, 'thoughts_token_count': 510, 'prompt_tokens_details': [{'modality': 'IMAGE', 'token_count': 1089}, {'modality': 'TEXT', 'token_count': 19}], 'candidates_token_count': 93, 'candidates_tokens_details': None, 'cached_content_token_count': None, 'tool_use_prompt_token_count': None, 'tool_use_prompt_tokens_details': None}
+============================== cruiser-bike-1
+--- prompt_only parsed: None
+--- prompt_only text:
+```json
+{
+  "title": "Vintage Mint Green Cruiser Bike with Wicker Basket",
+  "category": "bikes",
+  "condition": "fair",
+  "color": "Mint Green",
+  "description": "This cruiser bike features a mint green frame and fender with a classic front wicker basket and brown saddle. It is equipped with swept-back handlebars, brown grips, a handlebar bell, a hand brake, and a kickstand. The bike shows cosmetic wear, including paint chipping on the front fender and rust along the wheel spokes.",
+  "pitch": "Check out this vintage-style mint green cruiser bike complete with a front wicker basket. Perfect for casual rides around town!"
+}
+```
+--- prompt_only parts count: 1
+--- with_schema parsed: {'color': 'Mint Green', 'pitch': 'Check out this classic cruiser bike featuring a front wicker basket and vintage styling. It is ready for your next casual ride around town.', 'title': 'Vintage Mint Green Bicycle with Wicker Front Basket', 'category': 'bikes', 'condition': 'fair', 'description': 'This vintage-style bicycle features a mint green fender with noticeable paint chipping and wear. It comes equipped with a front woven wicker basket, a brown saddle, matching handlebar grips, and a bell. Rust is visible on the wheel spokes and select metal hardware.'}
+--- with_schema text:
+{
+  "title": "Vintage Mint Green Bicycle with Wicker Front Basket",
+  "category": "bikes",
+  "condition": "fair",
+  "color": "Mint Green",
+  "description": "This vintage-style bicycle features a mint green fender with noticeable paint chipping and wear. It comes equipped with a front woven wicker basket, a brown saddle, matching handlebar grips, and a bell. Rust is visible on the wheel spokes and select metal hardware.",
+  "pitch": "Check out this classic cruiser bike featuring a front wicker basket and vintage styling. It is ready for your next casual ride around town."
+}
+--- usage prompt_only: {'traffic_type': None, 'total_token_count': 1922, 'prompt_token_count': 1357, 'cache_tokens_details': None, 'thoughts_token_count': 416, 'prompt_tokens_details': [{'modality': 'IMAGE', 'token_count': 1089}, {'modality': 'TEXT', 'token_count': 268}], 'candidates_token_count': 149, 'candidates_tokens_details': None, 'cached_content_token_count': None, 'tool_use_prompt_token_count': None, 'tool_use_prompt_tokens_details': None}
+--- usage with_schema: {'traffic_type': None, 'total_token_count': 1851, 'prompt_token_count': 1108, 'cache_tokens_details': None, 'thoughts_token_count': 610, 'prompt_tokens_details': [{'modality': 'IMAGE', 'token_count': 1089}, {'modality': 'TEXT', 'token_count': 19}], 'candidates_token_count': 133, 'candidates_tokens_details': None, 'cached_content_token_count': None, 'tool_use_prompt_token_count': None, 'tool_use_prompt_tokens_details': None}
+============================== film-camera-1
+--- prompt_only parsed: None
+--- prompt_only text:
+```json
+{
+  "title": "Vintage Style Silver and Black SLR Camera",
+  "category": "cameras",
+  "condition": "good",
+  "color": "Silver and black",
+  "description": "This camera features a classic two-tone design with a silver top and bottom plate paired with a textured black body. It is equipped with a front-mounted lens, manual top dials, and a central prism housing. The exterior surfaces appear clean with no major visible marks or damage.",
+  "pitch": "Check out this classic silver and black SLR camera. It features clean surfaces, manual controls, and an attached lens."
+}
+```
+--- prompt_only parts count: 1
+--- with_schema parsed: {'color': 'Silver and black', 'pitch': 'Capture classic shots with this vintage-style SLR camera. Its sleek silver and black body comes complete with an attached lens.', 'title': 'Vintage-Style SLR Camera with Lens', 'category': 'cameras', 'condition': 'like new', 'description': 'This SLR camera features a two-tone design with a silver top plate and base alongside a textured black body. It is equipped with a front-mounted prime lens and mechanical dials on top. The exterior shows no noticeable scratches, dents, or signs of wear.'}
+--- with_schema text:
+{
+  "title": "Vintage-Style SLR Camera with Lens",
+  "category": "cameras",
+  "condition": "like new",
+  "color": "Silver and black",
+  "description": "This SLR camera features a two-tone design with a silver top plate and base alongside a textured black body. It is equipped with a front-mounted prime lens and mechanical dials on top. The exterior shows no noticeable scratches, dents, or signs of wear.",
+  "pitch": "Capture classic shots with this vintage-style SLR camera. Its sleek silver and black body comes complete with an attached lens."
+}
+--- usage prompt_only: {'traffic_type': None, 'total_token_count': 2185, 'prompt_token_count': 1357, 'cache_tokens_details': None, 'thoughts_token_count': 689, 'prompt_tokens_details': [{'modality': 'TEXT', 'token_count': 268}, {'modality': 'IMAGE', 'token_count': 1089}], 'candidates_token_count': 139, 'candidates_tokens_details': None, 'cached_content_token_count': None, 'tool_use_prompt_token_count': None, 'tool_use_prompt_tokens_details': None}
+--- usage with_schema: {'traffic_type': None, 'total_token_count': 1891, 'prompt_token_count': 1108, 'cache_tokens_details': None, 'thoughts_token_count': 651, 'prompt_tokens_details': [{'modality': 'IMAGE', 'token_count': 1089}, {'modality': 'TEXT', 'token_count': 19}], 'candidates_token_count': 132, 'candidates_tokens_details': None, 'cached_content_token_count': None, 'tool_use_prompt_token_count': None, 'tool_use_prompt_tokens_details': None}
+             name prompt_only_errortype prompt_only_errormsg with_schema_errortype
+0     salt-lamp-1                  None                 None                  None
+1      backpack-1                  None                 None                  None
+2        guitar-1                  None                 None                  None
+3     desk-lamp-1                  None                 None                  None
+4  cruiser-bike-1                  None                 None                  None
+5   film-camera-1                  None                 None                  None
+[exit 0]
+

@@ -1,0 +1,16 @@
+# pixeltable 0.7.25
+$ bash -c cd ~/Documents/Github/pixeltable-youtube/trace-answers-to-media && .venv/bin/python runs/check_batch_spans.py
+Connected to Pixeltable database at: postgresql+psycopg://postgres:***@/pixeltable?host=%2Fvar%2Ffolders%2Fzz%2Fd4wytf2s44996j3sr4zgthw80000gn%2FT%2F2c7ec02fb8
+Inserted 2 rows with 0 errors in 11.66 s (0.17 rows/s)
+UpdateStatus(updated_cols=[], cols_with_excs=[], rows=None, row_count_stats=RowCountStats(inserted_rows=2, deleted_rows=0, updated_rows=0, num_excs=0, skipped_rows=0), cascade_row_count_stats=RowCountStats(inserted_rows=0, deleted_rows=0, updated_rows=0, num_excs=0, skipped_rows=0))
+traces in this insert: 2
+01a20a84ebadabacbd06ad05318bce05 pixeltable.media.fetch parent: pixeltable.store.insert_rows {'pxt.url': 'https://raw.githubusercontent.com/apreshill/pixeltable-marketplace/main/samples/table-lamp-1.jpg'}
+01a20a84ebadabacbd06ad05318bce05 pixeltable.media.fetch parent: pixeltable.store.insert_rows {'pxt.url': 'https://raw.githubusercontent.com/apreshill/pixeltable-marketplace/main/samples/road-bike-1.jpg'}
+01a20a84ebadabacbd06ad05318bce05 pixeltable.udf.generate_content parent: pixeltable.store.insert_rows {'pxt.column': 'response'}
+    event pixeltable.udf.tokens {'pxt.input_tokens': 1108, 'pxt.output_tokens': 94, 'pxt.udf': 'generate_content', 'pxt.udf_path': 'pixeltable.functions.gemini.generate_content', 'pxt.model': 'gemini-3.8-flash'}
+01a20a84ebadabacbd06ad05318bce05 pixeltable.row parent: pixeltable.store.insert_rows {}
+01a20a84ebadabacbd06ad05318bce05 pixeltable.udf.generate_content parent: pixeltable.store.insert_rows {'pxt.column': 'response'}
+    event pixeltable.udf.tokens {'pxt.input_tokens': 1108, 'pxt.output_tokens': 75, 'pxt.udf': 'generate_content', 'pxt.udf_path': 'pixeltable.functions.gemini.generate_content', 'pxt.model': 'gemini-3.8-flash'}
+01a20a84ebadabacbd06ad05318bce05 pixeltable.row parent: pixeltable.store.insert_rows {}
+[exit 0]
+

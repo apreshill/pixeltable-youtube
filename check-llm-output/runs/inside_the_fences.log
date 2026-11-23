@@ -1,0 +1,34 @@
+# pixeltable 0.7.25
+$ bash -c cd ~/Documents/Github/pixeltable-youtube/check-llm-output/runs && uv run python inside_the_fences.py 2>&1 | grep -v '^Connected\|^Creating'
+--- backpack-1: starts with '```json'
+    keys in the text: ['title', 'category', 'condition', 'color', 'description', 'pitch', 'properties']
+    repeated keys: none
+    keys not in ListingDetails: ['properties']
+    without the fence: json.loads and ListingDetails.model_validate pass
+--- cruiser-bike-1: starts with '```json'
+    keys in the text: ['title', 'category', 'condition', 'color', 'description', 'pitch']
+    repeated keys: none
+    keys not in ListingDetails: none
+    without the fence: json.loads and ListingDetails.model_validate pass
+--- desk-lamp-1: starts with '```json'
+    keys in the text: ['title', 'category', 'condition', 'color', 'description', 'pitch']
+    repeated keys: none
+    keys not in ListingDetails: none
+    without the fence: json.loads and ListingDetails.model_validate pass
+--- film-camera-1: starts with '```json'
+    keys in the text: ['title', 'category', 'condition', 'color', 'description', 'pitch']
+    repeated keys: none
+    keys not in ListingDetails: none
+    without the fence: json.loads and ListingDetails.model_validate pass
+--- guitar-1: starts with '```json'
+    keys in the text: ['title', 'category', 'condition', 'color', 'description', 'pitch']
+    repeated keys: none
+    keys not in ListingDetails: none
+    without the fence: json.loads and ListingDetails.model_validate pass
+--- salt-lamp-1: starts with '```json'
+    keys in the text: ['title', 'category', 'condition', 'color', 'description', 'pitch', 'description_schema']
+    repeated keys: none
+    keys not in ListingDetails: ['description_schema']
+    without the fence: json.loads and ListingDetails.model_validate pass
+[exit 0]
+

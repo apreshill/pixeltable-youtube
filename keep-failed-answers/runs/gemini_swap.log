@@ -1,0 +1,29 @@
+# pixeltable 0.7.25, 2026-11-23, sandbox; pxt schema update schema_gemini.py answers_gemini, then python gemini_swap.py (6 real gemini-3.8-flash calls), then token usage per row
++ answers_gemini/listings  create
+
+Plan: 1 create, 0 update, 0 unchanged, 0 extra  |  0 destructive
+exit=2
+created   answers_gemini/listings
+Connected to Pixeltable database at: postgresql+psycopg://postgres:***@/pixeltable?host=%2Fvar%2Ffolders%2Fzz%2Fd4wytf2s44996j3sr4zgthw80000gn%2FT%2F1ceda80dee
+Inserted 6 rows with 0 errors in 17.52 s (0.34 rows/s)
+UpdateStatus(updated_cols=[], cols_with_excs=[], rows=None, row_count_stats=RowCountStats(inserted_rows=6, deleted_rows=0, updated_rows=0, num_excs=0, skipped_rows=0), cascade_row_count_stats=RowCountStats(inserted_rows=0, deleted_rows=0, updated_rows=0, num_excs=0, skipped_rows=0))
+             name details_condition     details_color details_errortype
+0     desk-lamp-1          like new             black              None
+1     salt-lamp-1          like new            Orange              None
+2   film-camera-1              good  Silver and black              None
+3  cruiser-bike-1              fair        Mint green              None
+4      backpack-1          like new             Brown              None
+5        guitar-1              good      Natural wood              None
+failed: 0
+rerun rows: 0
+Traceback (most recent call last):
+  File "<scratchpad>/kfa-nb/gemini_swap.py", line 13, in <module>
+    u = r['response_usage_metadata']
+        ~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'response_usage_metadata'
+desk-lamp-1 gemini-3.8-flash 1108 134 404
+salt-lamp-1 gemini-3.8-flash 1108 94 596
+film-camera-1 gemini-3.8-flash 1108 105 617
+cruiser-bike-1 gemini-3.8-flash 1108 120 414
+backpack-1 gemini-3.8-flash 1108 128 608
+guitar-1 gemini-3.8-flash 1108 107 553

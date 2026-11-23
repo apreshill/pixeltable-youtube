@@ -1,0 +1,17 @@
+# A temporary schema file (deleted after the test) repeated schema_validate.py and added
+#     refuse_test = validate_listing(always_barely_used(response.parsed))
+# where always_barely_used sets condition to 'barely used' on every row. The table already held guitar-1.
+# The update is refused, and the column isn't added (grep -c refuse_test prints 0).
+# pixeltable 0.7.25
+$ bash -c cd ~/Documents/Github/pixeltable-youtube/check-llm-output && env -u GEMINI_API_KEY uv run pxt schema update tmp_refuse_test.py verify_demo -f; echo exit=$?; env -u GEMINI_API_KEY uv run pxt describe verify_demo/photos 2>&1 | grep -c refuse_test; uv run pxt daemon stop
+pxt: 400 Error while evaluating computed column 'refuse_test':
+1 validation error for ListingDetails
+condition
+  Input should be 'new', 'like new', 'good' or 'fair' [type=literal_error, input_value='barely used', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+[UNSUPPORTED_OPERATION]
+exit=1
+0
+pxt: stopped daemon (PID 25303)
+[exit 0]
+
