@@ -484,7 +484,7 @@ requires-dist = [
     { name = "jupyterlab", specifier = ">=4.6.4" },
     { name = "notebook", specifier = ">=7.6.3" },
     { name = "pillow", specifier = ">=13.0.0" },
-    { name = "pixeltable", specifier = ">=0.7.24" },
+    { name = "pixeltable", specifier = ">=0.7.25" },
 ]
 
 [[package]]
@@ -2554,7 +2554,7 @@ wheels = [
 
 [[package]]
 name = "pixeltable"
-version = "0.7.24"
+version = "0.7.25"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -2599,7 +2599,7 @@ dependencies = [
     { name = "tzlocal" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bd/89/f6e7eabc93be3ee281b268dd0203a4d322cc92f78d2765577b4a7867a85d/pixeltable-0.7.24-py3-none-any.whl", hash = "sha256:a60bc6b694d89933b7504bb6d31e1bd9bd6373b3fee644fbeb77481874a7c060", size = 1490312, upload-time = "2026-11-07T04:19:47.881Z" },
+    { url = "https://files.pythonhosted.org/packages/04/9b/79c0713e92c0c0f899ea6ceec143cb8220525ed34c87d7c2ac1015c3fe4a/pixeltable-0.7.25-py3-none-any.whl", hash = "sha256:25dd0988c502dbaf6f4ceef85efa90739fbea057b7b8a69b08a7d6af191f2a14", size = 1527209, upload-time = "2026-11-18T16:52:12.929Z" },
 ]
 
 [[package]]

@@ -82,7 +82,7 @@ cd branded-newsletter-visuals
 uv sync
 ```
 
-That creates `branded-newsletter-visuals/.venv` and installs Pixeltable 0.7.24 or newer, plus Pillow, the Gemini SDK, and Jupyter.
+That creates `branded-newsletter-visuals/.venv` and installs Pixeltable 0.7.25 or newer, plus Pillow, the Gemini SDK, and Jupyter.
 
 ### 3. Register the Kernel
 
@@ -206,7 +206,7 @@ Issues 106 and 93 are already in `sample_issues.py`. Insert one by changing `109
 
 ### Dependencies
 
-- Pixeltable 0.7.24 or newer: tables, computed columns, `pxt schema`, and `gemini.generate_video` for Omni
+- Pixeltable 0.7.25 or newer: tables, computed columns, `pxt schema`, and `gemini.generate_video` for Omni
 - google-genai: the still, through Nano Banana (`gemini-3.1-flash-image-preview`), and the video, through Gemini Omni Flash (`gemini-omni-1.1-flash`)
 - Pillow: the brand plate
 - JupyterLab and ipykernel: running the notebook
